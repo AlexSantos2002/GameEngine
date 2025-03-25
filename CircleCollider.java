@@ -2,7 +2,11 @@ import java.awt.Point;
 
 /**
  * Colisor circular que se ajusta à posição, rotação e escala da Transform associada.
+ * @author Alexandre Santos(71522), Nurio Pereira (72788)
+ * @version 1.0 25/03/2025
+ * @inv O centro do círculo é sempre a posição definida pela Transform associada. O raio é escalado de acordo com o fator de escala.
  */
+
 public class CircleCollider extends Collider {
     private double x, y, r;
 

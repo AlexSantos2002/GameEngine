@@ -2,10 +2,11 @@ import java.awt.Point;
 
 /**
  * Classe que representa a transformação de um GameObject (posição, rotação e escala).
- * @author 
+ * @author Alexandre Santos(71522), Nurio Pereira (72788)
  * @version 25/03/2025
  * @inv A rotação está sempre no intervalo [0, 360)
  */
+
 public class Transform implements ITransform {
     private double x, y, angle, scale;
     private int layer;

@@ -2,7 +2,12 @@ import java.awt.Point;
 
 /**
  * Interface que define as transformações básicas de um GameObject (posição, rotação, escala).
+ * Representa a forma como um objeto é posicionado e orientado no espaço 2D do jogo.
+ * @author Alexandre Santos(71522), Nurio Pereira (72788)
+ * @version 1.0 25/03/2025
+ * @inv A rotação deve estar no intervalo [0, 360). A escala deve ser positiva. A posição é expressa em coordenadas inteiras.
  */
+
 public interface ITransform {
     /**
      * Move esta Transform por dPos.x(), dPos.y() e dlayer.

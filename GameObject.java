@@ -1,6 +1,11 @@
 /**
- * Classe que representa um objeto no jogo, com Transform e Collider.
+ * Classe que representa um objeto no jogo, com nome, uma Transform e um Collider associado.
+ * É a estrutura principal que combina comportamento posicional com detecção de colisão.
+ * @author Alexandre Santos(71522), Nurio Pereira (72788)
+ * @version 1.0 25/03/2025
+ * @inv A posição do GameObject coincide com o centroide do colisor. A Transform controla posição, rotação e escala do objeto.
  */
+
 public class GameObject implements IGameObject {
     private String name;
     private Transform transform;

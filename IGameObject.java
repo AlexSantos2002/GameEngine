@@ -1,4 +1,10 @@
- 
+/**
+ * Interface que representa um GameObject no sistema.
+ * Expõe os métodos essenciais para aceder ao nome, Transform e Collider do objeto de jogo.
+ * @author Alexandre Santos(71522), Nurio Pereira (72788)
+ * @version 1.0 25/03/2025
+ * @inv O centroide do Collider deve coincidir com a posição da Transform.
+ */
 public interface IGameObject { 
  
     /** 

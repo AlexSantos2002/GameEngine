@@ -2,8 +2,13 @@ import java.awt.Point;
 import java.util.*;
 
 /**
- * Programa principal que cria o GameObject e aplica transformações conforme o problema M.
+ * Programa principal que cria um GameObject e aplica transformações dinâmicas (move, rotate, scale) conforme o problema M.
+ * Lê dados de entrada e imprime a descrição final do objeto transformado.
+ * Compatível com testes automáticos do Mooshak para o problema POO24-25 - Transformação de GameObjects.
+ * @author Alexandre Santos(71522), Nurio Pereira (72788)
+ * @version 1.0 25/03/2025
  */
+
 public class Main {
     public static void main(String[] args) {
         try (Scanner sc = new Scanner(System.in)) {

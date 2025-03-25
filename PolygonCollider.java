@@ -2,8 +2,14 @@ import java.awt.Point;
 import java.util.*;
 
 /**
- * Colisor poligonal que ajusta os vértices com rotação, escala e translação da Transform.
+ * Colisor poligonal que ajusta os vértices com base na Transform: move, rotação e escala.
+ * Mantém os vértices originais para aplicar transformações acumuladas com precisão.
+ * Garante que a posição da Transform coincide com o novo centroide após transformação.
+ * @author Alexandre Santos(71522), Nurio Pereira (72788)
+ * @version 1.0 25/03/2025
+ * @inv O colisor está sempre centrado na Transform do GameObject. As transformações são aplicadas sobre os vértices originais.
  */
+
 public class PolygonCollider extends Collider {
     private final List<Point.Double> originalVertices;
     private List<Point.Double> transformedVertices;
