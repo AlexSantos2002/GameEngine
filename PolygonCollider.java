@@ -9,23 +9,38 @@ import java.util.*;
  * @version 1.0 25/03/2025
  * @inv O colisor está sempre centrado na Transform do GameObject. As transformações são aplicadas sobre os vértices originais.
  */
-
 public class PolygonCollider extends Collider {
     private final List<Point.Double> originalVertices;
     private List<Point.Double> transformedVertices;
 
+    /**
+     * Construtor privado da classe PolygonCollider.
+     * @param t Transform associada ao GameObject
+     * @param verts Lista de vértices originais do polígono (sentido horário)
+     */
     private PolygonCollider(Transform t, List<Point.Double> verts) {
         super(t);
         this.originalVertices = new ArrayList<>(verts);
         this.transformedVertices = new ArrayList<>();
     }
 
+    /**
+     * Método de criação do PolygonCollider com transformação inicial aplicada.
+     * @param t Transform associada
+     * @param verts lista de vértices originais (sentido horário)
+     * @return nova instância de PolygonCollider com os vértices transformados
+     */
     public static PolygonCollider create(Transform t, List<Point.Double> verts) {
         PolygonCollider c = new PolygonCollider(t, verts);
         c.adjustToTransform();
         return c;
     }
 
+    /**
+     * Calcula o centroide do polígono original com base na fórmula do centroide de polígono irregular.
+     * @param verts lista de vértices a partir dos quais calcular o centroide
+     * @return ponto que representa o centro geométrico (centroide) do polígono
+     */
     private Point.Double computeCentroid(List<Point.Double> verts) {
         double A = 0, cx = 0, cy = 0;
         int n = verts.size();
@@ -45,6 +60,10 @@ public class PolygonCollider extends Collider {
         return new Point.Double(cx, cy);
     }
 
+    /**
+     * Aplica as transformações de rotação, escala e deslocamento aos vértices originais,
+     * armazenando os vértices resultantes em `transformedVertices`.
+     */
     @Override
     public void adjustToTransform() {
         Point.Double centroid = computeCentroid(originalVertices);
@@ -71,11 +90,19 @@ public class PolygonCollider extends Collider {
         this.transformedVertices = moved;
     }
 
+    /**
+     * Retorna o centroide atual do polígono transformado, que coincide com a posição da Transform.
+     * @return ponto (x,y) representando o centro atual do polígono
+     */
     @Override
     public Point centroid() {
         return new Point((int) transform.posX(), (int) transform.posY());
     }
 
+    /**
+     * Representação textual dos vértices transformados do polígono.
+     * @return string com coordenadas formatadas dos vértices no formato (x,y)
+     */
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
