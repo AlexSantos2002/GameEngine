@@ -1,50 +1,45 @@
-public class ITransform {
-        /** 
-     * Move this ITransform by dPos.x(), dPos.y() and dlayer 
-     * @param dPos     the 2D differential to move 
-     * @param dlayer  the layer differential 
-     */ 
-    public void move(Point dPos, int dlayer){
+import java.awt.Point;
 
-    } //TESTEZÃO
- 
-    /** 
-     * Rotate this ITransform from current orientation by dTheta 
-     * @param dTheta 
-     * pos: 0 <= this.angle() < 360 
-     */ 
-    public void rotate(double dTheta){
+/**
+ * Interface que define as transformações básicas de um GameObject (posição, rotação, escala).
+ */
+public interface ITransform {
+    /**
+     * Move esta Transform por dPos.x(), dPos.y() e dlayer.
+     * @param dPos  deslocamento 2D
+     * @param dlayer deslocamento da layer
+     */
+    void move(Point dPos, int dlayer);
 
-    }
- 
-    /** 
-     * increment the ITransform scale by dscale 
-     * @param dScale the scale increment 
-     */ 
-    public void scale(double dScale){
+    /**
+     * Roda esta Transform pelo ângulo indicado (anti-horário).
+     * @param dTheta ângulo a adicionar
+     */
+    void rotate(double dTheta);
 
-    }
- 
-    /** 
-     * @return the (x,y) coordinates 
-     */ 
-    public Point position(){
+    /**
+     * Aumenta a escala atual por dScale.
+     * @param dScale incremento de escala
+     */
+    void scale(double dScale);
 
-    }
- 
-    /** 
-     * @return the layer 
-    public int layer(); 
-    /** 
-    * @return the angle in degrees 
-    */ 
-    public double angle(){
+    /**
+     * @return posição (x,y)
+     */
+    Point position();
 
-    }
-    /** 
-    * @return the current scale factor 
-    */ 
-    public double scale(){
+    /**
+     * @return layer atual
+     */
+    int layer();
 
-    }
+    /**
+     * @return ângulo atual (0 <= angle < 360)
+     */
+    double angle();
+
+    /**
+     * @return escala atual
+     */
+    double scale();
 }

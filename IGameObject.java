@@ -15,6 +15,6 @@ public interface IGameObject {
      * @return the Collider of the GameObject with its centroid at this.transform().position() 
      */ 
     ICollider collider(); 
- 
-    // … 
+
+    String toString();
 }
