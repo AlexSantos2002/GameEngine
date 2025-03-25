@@ -5,28 +5,28 @@ import java.util.*;
  * Colisor poligonal que ajusta os vértices com rotação, escala e translação da Transform.
  */
 public class PolygonCollider extends Collider {
-    private List<Point.Double> vertices;
+    private final List<Point.Double> originalVertices;
+    private List<Point.Double> transformedVertices;
 
-    // Construtor privado
     private PolygonCollider(Transform t, List<Point.Double> verts) {
         super(t);
-        this.vertices = new ArrayList<>(verts);
+        this.originalVertices = new ArrayList<>(verts);
+        this.transformedVertices = new ArrayList<>();
     }
 
-    // Factory method
     public static PolygonCollider create(Transform t, List<Point.Double> verts) {
         PolygonCollider c = new PolygonCollider(t, verts);
-        c.adjustToTransform(); // só depois de tudo estar pronto
+        c.adjustToTransform();
         return c;
     }
 
-    private Point.Double computeCentroid() {
+    private Point.Double computeCentroid(List<Point.Double> verts) {
         double A = 0, cx = 0, cy = 0;
-        int n = vertices.size();
+        int n = verts.size();
 
         for (int i = 0; i < n; i++) {
-            Point.Double p0 = vertices.get(i);
-            Point.Double p1 = vertices.get((i + 1) % n);
+            Point.Double p0 = verts.get(i);
+            Point.Double p1 = verts.get((i + 1) % n);
             double cross = p0.x * p1.y - p1.x * p0.y;
             A += cross;
             cx += (p0.x + p1.x) * cross;
@@ -36,13 +36,12 @@ public class PolygonCollider extends Collider {
         A *= 0.5;
         cx /= (6 * A);
         cy /= (6 * A);
-
         return new Point.Double(cx, cy);
     }
 
     @Override
     public void adjustToTransform() {
-        Point.Double centroid = computeCentroid();
+        Point.Double centroid = computeCentroid(originalVertices);
         List<Point.Double> moved = new ArrayList<>();
 
         double rad = Math.toRadians(transform.angle());
@@ -50,7 +49,7 @@ public class PolygonCollider extends Collider {
         double tx = transform.posX(), ty = transform.posY();
         double scale = transform.scale();
 
-        for (Point.Double p : vertices) {
+        for (Point.Double p : originalVertices) {
             double x = p.x - centroid.x;
             double y = p.y - centroid.y;
 
@@ -63,7 +62,7 @@ public class PolygonCollider extends Collider {
             moved.add(new Point.Double(xr, yr));
         }
 
-        this.vertices = moved;
+        this.transformedVertices = moved;
     }
 
     @Override
@@ -74,7 +73,7 @@ public class PolygonCollider extends Collider {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        for (Point.Double p : vertices) {
+        for (Point.Double p : transformedVertices) {
             sb.append(String.format("(%.2f,%.2f) ", p.x, p.y));
         }
         return sb.toString().trim();

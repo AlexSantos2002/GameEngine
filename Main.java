@@ -2,19 +2,21 @@ import java.awt.Point;
 import java.util.*;
 
 /**
- * Programa principal que cria o GameObject a partir da entrada.
+ * Programa principal que cria o GameObject e aplica transformações conforme o problema M.
  */
 public class Main {
     public static void main(String[] args) {
         try (Scanner sc = new Scanner(System.in)) {
+            // Lê GameObject
             String name = sc.nextLine();
             double x = sc.nextDouble(), y = sc.nextDouble();
             int layer = sc.nextInt();
             double angle = sc.nextDouble(), scale = sc.nextDouble();
             Transform transform = new Transform(x, y, layer, angle, scale);
-            sc.nextLine(); // consume newline
+            sc.nextLine(); // consumir fim da linha
 
-            String[] data = sc.nextLine().split(" ");
+            // Lê Collider
+            String[] data = sc.nextLine().trim().split(" ");
             Collider collider;
 
             if (data.length == 3) {
@@ -31,13 +33,39 @@ public class Main {
                 }
                 collider = PolygonCollider.create(transform, vertices);
             }
-            
 
+            // Cria GameObject
             GameObject go = new GameObject(name, transform, collider);
+
+            // Aplica transformações subsequentes
+            while (sc.hasNextLine()) {
+                String line = sc.nextLine().trim();
+                if (line.isEmpty()) continue;
+
+                String[] parts = line.split(" ");
+                switch (parts[0]) {
+                    case "move":
+                        double dx = Double.parseDouble(parts[1]);
+                        double dy = Double.parseDouble(parts[2]);
+                        int dlayer = Integer.parseInt(parts[3]);
+                        transform.move(new Point((int) dx, (int) dy), dlayer);
+                        break;
+                    case "rotate":
+                        double dTheta = Double.parseDouble(parts[1]);
+                        transform.rotate(dTheta);
+                        break;
+                    case "scale":
+                        double dScale = Double.parseDouble(parts[1]);
+                        transform.scale(dScale);
+                        break;
+                }
+
+                // Reajusta o colisor após transformação
+                collider.adjustToTransform();
+            }
+
+            // Imprime GameObject final
             System.out.println(go);
-        } catch (NumberFormatException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
         }
     }
 }
