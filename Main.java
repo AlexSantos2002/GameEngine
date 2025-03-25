@@ -21,7 +21,7 @@ public class Main {
                 double cx = Double.parseDouble(data[0]);
                 double cy = Double.parseDouble(data[1]);
                 double r = Double.parseDouble(data[2]);
-                collider = new CircleCollider(transform, cx, cy, r);
+                collider = CircleCollider.create(transform, cx, cy, r);
             } else {
                 List<Point.Double> vertices = new ArrayList<>();
                 for (int i = 0; i < data.length; i += 2) {
@@ -29,8 +29,9 @@ public class Main {
                     double vy = Double.parseDouble(data[i + 1]);
                     vertices.add(new Point.Double(vx, vy));
                 }
-                collider = new PolygonCollider(transform, vertices);
+                collider = PolygonCollider.create(transform, vertices);
             }
+            
 
             GameObject go = new GameObject(name, transform, collider);
             System.out.println(go);

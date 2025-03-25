@@ -2,20 +2,28 @@ import java.awt.Point;
 import java.util.*;
 
 /**
- * Colisor poligonal que roda, escala e centra os vértices com base na Transform.
+ * Colisor poligonal que ajusta os vértices com rotação, escala e translação da Transform.
  */
 public class PolygonCollider extends Collider {
     private List<Point.Double> vertices;
 
-    public PolygonCollider(Transform t, List<Point.Double> originalVertices) {
+    // Construtor privado
+    private PolygonCollider(Transform t, List<Point.Double> verts) {
         super(t);
-        this.vertices = new ArrayList<>(originalVertices);
-        adjustToTransform();
+        this.vertices = new ArrayList<>(verts);
+    }
+
+    // Factory method
+    public static PolygonCollider create(Transform t, List<Point.Double> verts) {
+        PolygonCollider c = new PolygonCollider(t, verts);
+        c.adjustToTransform(); // só depois de tudo estar pronto
+        return c;
     }
 
     private Point.Double computeCentroid() {
         double A = 0, cx = 0, cy = 0;
         int n = vertices.size();
+
         for (int i = 0; i < n; i++) {
             Point.Double p0 = vertices.get(i);
             Point.Double p1 = vertices.get((i + 1) % n);
@@ -24,9 +32,11 @@ public class PolygonCollider extends Collider {
             cx += (p0.x + p1.x) * cross;
             cy += (p0.y + p1.y) * cross;
         }
+
         A *= 0.5;
         cx /= (6 * A);
         cy /= (6 * A);
+
         return new Point.Double(cx, cy);
     }
 
@@ -36,11 +46,9 @@ public class PolygonCollider extends Collider {
         List<Point.Double> moved = new ArrayList<>();
 
         double rad = Math.toRadians(transform.angle());
-        double cos = Math.cos(rad);
-        double sin = Math.sin(rad);
+        double cos = Math.cos(rad), sin = Math.sin(rad);
+        double tx = transform.posX(), ty = transform.posY();
         double scale = transform.scale();
-        double tx = transform.posX();
-        double ty = transform.posY();
 
         for (Point.Double p : vertices) {
             double x = p.x - centroid.x;
@@ -60,7 +68,7 @@ public class PolygonCollider extends Collider {
 
     @Override
     public Point centroid() {
-        return new Point((int)transform.posX(), (int)transform.posY());
+        return new Point((int) transform.posX(), (int) transform.posY());
     }
 
     @Override
