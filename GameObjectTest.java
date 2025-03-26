@@ -1,9 +1,12 @@
 import static org.junit.Assert.assertEquals;
-
 import java.awt.Point;
 import java.util.List;
 import org.junit.Test;
 
+/**
+ * @author Alexandre Santos (71522)
+ * @version 1.0 26/03/2025
+ */
 public class GameObjectTest {
 
     @Test
