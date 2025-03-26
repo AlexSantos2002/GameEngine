@@ -5,11 +5,8 @@ import java.util.*;
 import org.junit.Test;
 
 /**
- * Colisor poligonal que ajusta os vértices com base na Transform: move, rotação e escala.
- * Mantém os vértices originais para aplicar transformações acumuladas com precisão.
- * Garante que a posição da Transform coincide com o novo centroide após transformação.
  * @author Nurio Pereira (72788)
- * @version 1.0 25/03/2025
+ * @version 1.0 26/03/2025
  */
 
 public class PolygonColliderTest {
