@@ -3,6 +3,8 @@ import java.awt.Point;
 import org.junit.Test;
 
 /**
+ * Testes unitários para a classe CircleCollider.
+ * Valida a criação, transformação e formatação do colisor circular.
  * @author Alexandre Santos (71522)
  * @version 1.0 26/03/2025
  */
@@ -19,14 +21,14 @@ public class CircleColliderTest {
     public void testRadiusIsScaled() {
         Transform t = new Transform(2, 2, 0, 0, 2.0);
         CircleCollider c = CircleCollider.create(t, 0, 0, 4);
-    
+
         String str = c.toString();
         System.out.println("DEBUG: toString() = " + str);
-    
+
         String[] parts = str.split(" ");
         assertEquals("(2,00,2,00)", parts[0]);
         double raio = Double.parseDouble(parts[1].replace(",", "."));
-    
+
         assertEquals(8.0, raio, 0.01);
     }
 

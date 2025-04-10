@@ -9,32 +9,17 @@ import java.util.*;
  * @version 10/04/2025
  * @inv Todos os GameObjects tem colisores centrados na sua posicao. Objetos em diferentes layers nao colidem.
  */
-
 public class GameEngine {
     private final List<GameObject> objects = new ArrayList<>();
 
-    /**
-     * Adiciona um novo GameObject a lista.
-     * @param go GameObject a ser adicionado
-     */
     public void add(GameObject go) {
         objects.add(go);
     }
 
-    /**
-     * Remove um GameObject da lista.
-     * @param go GameObject a ser removido
-     */
     public void destroy(GameObject go) {
         objects.remove(go);
     }
 
-    /**
-     * Simula a engine durante um numero de frames, atualizando cada GameObject e registando colisoes.
-     * @param frames numero de frames a simular
-     * @param velocities mapa de GameObjects para vetores de movimento (dx, dy, dLayer, dAngle, dScale)
-     * @return mapa com cada GameObject e respetivos objetos em colisao
-     */
     public Map<GameObject, List<GameObject>> simulate(int frames, Map<GameObject, double[]> velocities) {
         for (int i = 0; i < frames; i++) {
             for (GameObject go : objects) {
@@ -61,23 +46,48 @@ public class GameEngine {
         return collisions;
     }
 
-    /**
-     * Detecao simplificada de colisao por sobreposicao de centroides (exemplo: bounding box ou centro).
-     * Para este stub, considera-se colisao se centroides forem coincidentes.
-     * @param a primeiro colisor
-     * @param b segundo colisor
-     * @return true se colidirem
-     */
     private boolean detectCollision(ICollider a, ICollider b) {
         Point pa = a.centroid();
         Point pb = b.centroid();
-        return pa.equals(pb);
+
+        // Círculo–círculo colisão
+        if (a instanceof CircleCollider && b instanceof CircleCollider) {
+            CircleCollider ca = (CircleCollider) a;
+            CircleCollider cb = (CircleCollider) b;
+            double dx = ca.centroid().x - cb.centroid().x;
+            double dy = ca.centroid().y - cb.centroid().y;
+            double distanceSq = dx * dx + dy * dy;
+            double radiusSum = ca.getRadius() + cb.getRadius();
+            return distanceSq <= radiusSum * radiusSum;
+        }
+
+        // Círculo–polígono colisão (centro dentro de bounding box)
+        if (a instanceof CircleCollider && b instanceof PolygonCollider) {
+            return isPointNearPolygon(a.centroid(), (PolygonCollider) b);
+        }
+        if (b instanceof CircleCollider && a instanceof PolygonCollider) {
+            return isPointNearPolygon(b.centroid(), (PolygonCollider) a);
+        }
+
+        // Polígono–polígono colisão (centroides muito próximos)
+        return pa.distance(pb) < 5.0; // aproximação grosseira
     }
 
-    /**
-     * Metodo auxiliar para simular e imprimir colisoes como pedido pelo enunciado.
-     * @param args argumentos ignorados
-     */
+    private boolean isPointNearPolygon(Point circleCenter, PolygonCollider poly) {
+        String polyStr = poly.toString();
+        String[] verts = polyStr.split("\\) ");
+        for (String v : verts) {
+            v = v.replace("(", "").replace(")", "");
+            String[] coords = v.split(",");
+            double vx = Double.parseDouble(coords[0]);
+            double vy = Double.parseDouble(coords[1]);
+            double dx = vx - circleCenter.getX();
+            double dy = vy - circleCenter.getY();
+            if (dx * dx + dy * dy <= 25.0) return true;
+        }
+        return false;
+    }
+
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
         int frames = Integer.parseInt(sc.nextLine());
@@ -100,7 +110,7 @@ public class GameEngine {
             } else {
                 List<Point.Double> verts = new ArrayList<>();
                 for (int j = 0; j < cData.length; j += 2)
-                    verts.add(new Point.Double(Double.parseDouble(cData[j]), Double.parseDouble(cData[j+1])));
+                    verts.add(new Point.Double(Double.parseDouble(cData[j]), Double.parseDouble(cData[j + 1])));
                 c = PolygonCollider.create(t, verts);
             }
 
