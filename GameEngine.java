@@ -1,4 +1,5 @@
 import java.awt.Point;
+import java.awt.geom.Line2D;
 import java.util.*;
 
 /**
@@ -47,10 +48,6 @@ public class GameEngine {
     }
 
     private boolean detectCollision(ICollider a, ICollider b) {
-        Point pa = a.centroid();
-        Point pb = b.centroid();
-
-        // Círculo–círculo colisão
         if (a instanceof CircleCollider && b instanceof CircleCollider) {
             CircleCollider ca = (CircleCollider) a;
             CircleCollider cb = (CircleCollider) b;
@@ -61,31 +58,120 @@ public class GameEngine {
             return distanceSq <= radiusSum * radiusSum;
         }
 
-        // Círculo–polígono colisão (centro dentro de bounding box)
         if (a instanceof CircleCollider && b instanceof PolygonCollider) {
-            return isPointNearPolygon(a.centroid(), (PolygonCollider) b);
+            return circlePolygonCollision((CircleCollider) a, (PolygonCollider) b);
         }
         if (b instanceof CircleCollider && a instanceof PolygonCollider) {
-            return isPointNearPolygon(b.centroid(), (PolygonCollider) a);
+            return circlePolygonCollision((CircleCollider) b, (PolygonCollider) a);
         }
 
-        // Polígono–polígono colisão (centroides muito próximos)
-        return pa.distance(pb) < 5.0; // aproximação grosseira
+        if (a instanceof PolygonCollider && b instanceof PolygonCollider) {
+            return polygonPolygonCollision((PolygonCollider) a, (PolygonCollider) b);
+        }
+
+        return false;
     }
 
-    private boolean isPointNearPolygon(Point circleCenter, PolygonCollider poly) {
-        String polyStr = poly.toString();
-        String[] verts = polyStr.split("\\) ");
+    private boolean circlePolygonCollision(CircleCollider circle, PolygonCollider poly) {
+        Point center = circle.centroid();
+        double radius = circle.getRadius();
+        String[] verts = poly.toString().split("\\) ");
+        List<Point.Double> points = new ArrayList<>();
+
         for (String v : verts) {
             v = v.replace("(", "").replace(")", "");
             String[] coords = v.split(",");
-            double vx = Double.parseDouble(coords[0]);
-            double vy = Double.parseDouble(coords[1]);
-            double dx = vx - circleCenter.getX();
-            double dy = vy - circleCenter.getY();
-            if (dx * dx + dy * dy <= 25.0) return true;
+            double x = Double.parseDouble(coords[0]);
+            double y = Double.parseDouble(coords[1]);
+            points.add(new Point.Double(x, y));
         }
+
+        // Check vertex inside circle
+        for (Point.Double p : points) {
+            double dx = p.x - center.getX();
+            double dy = p.y - center.getY();
+            if (dx * dx + dy * dy <= radius * radius)
+                return true;
+        }
+
+        // Check circle center inside polygon
+        if (pointInPolygon(center, points)) return true;
+
+        // Check edge–circle intersection
+        for (int i = 0; i < points.size(); i++) {
+            Point.Double p1 = points.get(i);
+            Point.Double p2 = points.get((i + 1) % points.size());
+            if (lineIntersectsCircle(p1, p2, center, radius)) return true;
+        }
+
         return false;
+    }
+
+    private boolean polygonPolygonCollision(PolygonCollider a, PolygonCollider b) {
+        String[] va = a.toString().split("\\) ");
+        String[] vb = b.toString().split("\\) ");
+        List<Point.Double> pa = parsePoints(va);
+        List<Point.Double> pb = parsePoints(vb);
+
+        for (Point.Double p : pa)
+            if (pointInPolygon(new Point((int) p.x, (int) p.y), pb)) return true;
+        for (Point.Double p : pb)
+            if (pointInPolygon(new Point((int) p.x, (int) p.y), pa)) return true;
+
+        for (int i = 0; i < pa.size(); i++) {
+            Point.Double a1 = pa.get(i);
+            Point.Double a2 = pa.get((i + 1) % pa.size());
+            for (int j = 0; j < pb.size(); j++) {
+                Point.Double b1 = pb.get(j);
+                Point.Double b2 = pb.get((j + 1) % pb.size());
+                if (Line2D.linesIntersect(a1.x, a1.y, a2.x, a2.y, b1.x, b1.y, b2.x, b2.y))
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    private List<Point.Double> parsePoints(String[] verts) {
+        List<Point.Double> points = new ArrayList<>();
+        for (String v : verts) {
+            v = v.replace("(", "").replace(")", "");
+            String[] coords = v.split(",");
+            points.add(new Point.Double(Double.parseDouble(coords[0]), Double.parseDouble(coords[1])));
+        }
+        return points;
+    }
+
+    private boolean pointInPolygon(Point p, List<Point.Double> poly) {
+        int count = 0;
+        double x = p.getX(), y = p.getY();
+        for (int i = 0; i < poly.size(); i++) {
+            Point.Double a = poly.get(i);
+            Point.Double b = poly.get((i + 1) % poly.size());
+            if (((a.y > y) != (b.y > y)) &&
+                (x < (b.x - a.x) * (y - a.y) / (b.y - a.y + 1e-9) + a.x)) {
+                count++;
+            }
+        }
+        return count % 2 == 1;
+    }
+
+    private boolean lineIntersectsCircle(Point.Double a, Point.Double b, Point center, double radius) {
+        double ax = a.x - center.x, ay = a.y - center.y;
+        double bx = b.x - center.x, by = b.y - center.y;
+
+        double dx = bx - ax, dy = by - ay;
+        double a2 = dx * dx + dy * dy;
+        double b2 = 2 * (ax * dx + ay * dy);
+        double c2 = ax * ax + ay * ay - radius * radius;
+
+        double disc = b2 * b2 - 4 * a2 * c2;
+        if (disc < 0) return false;
+
+        double t1 = (-b2 - Math.sqrt(disc)) / (2 * a2);
+        double t2 = (-b2 + Math.sqrt(disc)) / (2 * a2);
+
+        return (t1 >= 0 && t1 <= 1) || (t2 >= 0 && t2 <= 1);
     }
 
     public static void main(String[] args) {
