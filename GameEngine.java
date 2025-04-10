@@ -1,10 +1,10 @@
 /**
- * Classe que representa o motor de jogo, responsável por gerir GameObjects e simular colisões.
- * Permite adicionar/remover objetos e simular movimento e colisões durante múltiplas frames.
+ * Classe que representa o motor de jogo, responsavel por gerir GameObjects e simular colisoes.
+ * Permite adicionar/remover objetos e simular movimento e colisoes durante multiplas frames.
  * @author
  * Alexandre Santos (71522), Nurio Pereira (72788)
  * @version 10/04/2025
- * @inv Todos os GameObjects têm colisores centrados na sua posição. Objetos em diferentes layers não colidem.
+ * @inv Todos os GameObjects tem colisores centrados na sua posicao. Objetos em diferentes layers nao colidem.
  */
 import java.awt.Point;
 import java.util.*;
@@ -13,7 +13,7 @@ public class GameEngine {
     private final List<GameObject> objects = new ArrayList<>();
 
     /**
-     * Adiciona um novo GameObject à lista.
+     * Adiciona um novo GameObject a lista.
      * @param go GameObject a ser adicionado
      */
     public void add(GameObject go) {
@@ -29,10 +29,10 @@ public class GameEngine {
     }
 
     /**
-     * Simula a engine durante um número de frames, atualizando cada GameObject e registando colisões.
-     * @param frames número de frames a simular
+     * Simula a engine durante um numero de frames, atualizando cada GameObject e registando colisoes.
+     * @param frames numero de frames a simular
      * @param velocities mapa de GameObjects para vetores de movimento (dx, dy, dLayer, dAngle, dScale)
-     * @return mapa com cada GameObject e respetivos objetos em colisão
+     * @return mapa com cada GameObject e respetivos objetos em colisao
      */
     public Map<GameObject, List<GameObject>> simulate(int frames, Map<GameObject, double[]> velocities) {
         for (int i = 0; i < frames; i++) {
@@ -61,8 +61,8 @@ public class GameEngine {
     }
 
     /**
-     * Deteção simplificada de colisão por sobreposição de centroides (exemplo: bounding box ou centro).
-     * Para este stub, considera-se colisão se centroides forem coincidentes.
+     * Detecao simplificada de colisao por sobreposicao de centroides (exemplo: bounding box ou centro).
+     * Para este stub, considera-se colisao se centroides forem coincidentes.
      * @param a primeiro colisor
      * @param b segundo colisor
      * @return true se colidirem
@@ -74,7 +74,7 @@ public class GameEngine {
     }
 
     /**
-     * Método auxiliar para simular e imprimir colisões como pedido pelo enunciado.
+     * Metodo auxiliar para simular e imprimir colisoes como pedido pelo enunciado.
      * @param args argumentos ignorados
      */
     public static void main(String[] args) {
