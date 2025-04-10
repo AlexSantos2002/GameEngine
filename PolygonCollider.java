@@ -67,7 +67,7 @@ public class PolygonCollider extends Collider {
     @Override
     public void adjustToTransform() {
         Point.Double centroid = computeCentroid(originalVertices);
-        List<Point.Double> moved = new ArrayList<>();
+        List<Point.Double> moved = new ArrayList<>(); // tirar as imutabilidades
 
         double rad = Math.toRadians(transform.angle());
         double cos = Math.cos(rad), sin = Math.sin(rad);
