@@ -1,3 +1,6 @@
+import java.awt.Point;
+import java.util.*;
+
 /**
  * Classe que representa o motor de jogo, responsavel por gerir GameObjects e simular colisoes.
  * Permite adicionar/remover objetos e simular movimento e colisoes durante multiplas frames.
@@ -6,8 +9,6 @@
  * @version 10/04/2025
  * @inv Todos os GameObjects tem colisores centrados na sua posicao. Objetos em diferentes layers nao colidem.
  */
-import java.awt.Point;
-import java.util.*;
 
 public class GameEngine {
     private final List<GameObject> objects = new ArrayList<>();
