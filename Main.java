@@ -1,26 +1,26 @@
 import java.awt.Point;
-import java.util.*;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Scanner;
 
 /**
  * Programa principal que cria um GameObject e aplica transformações dinâmicas (move, rotate, scale) conforme o problema M.
  * Lê dados de entrada e imprime a descrição final do objeto transformado.
  * Compatível com testes automáticos do Mooshak para o problema POO24-25 - Transformação de GameObjects.
- * @author Alexandre Santos(71522), Nurio Pereira (72788)
+ * 
+ * @author Alexandre Santos (71522), Nurio Pereira (72788)
  * @version 1.0 25/03/2025
  */
-
 public class Main {
     public static void main(String[] args) {
         try (Scanner sc = new Scanner(System.in)) {
-            // Lê GameObject
             String name = sc.nextLine();
             double x = sc.nextDouble(), y = sc.nextDouble();
             int layer = sc.nextInt();
             double angle = sc.nextDouble(), scale = sc.nextDouble();
             Transform transform = new Transform(x, y, layer, angle, scale);
-            sc.nextLine(); // consumir fim da linha
+            sc.nextLine();
 
-            // Lê Collider
             String[] data = sc.nextLine().trim().split(" ");
             Collider collider;
 
@@ -39,10 +39,8 @@ public class Main {
                 collider = PolygonCollider.create(transform, vertices);
             }
 
-            // Cria GameObject
             GameObject go = new GameObject(name, transform, collider);
 
-            // Aplica transformações subsequentes
             while (sc.hasNextLine()) {
                 String line = sc.nextLine().trim();
                 if (line.isEmpty()) continue;
@@ -65,11 +63,9 @@ public class Main {
                         break;
                 }
 
-                // Reajusta o colisor após transformação
                 collider.adjustToTransform();
             }
 
-            // Imprime GameObject final
             System.out.println(go);
         }
     }
