@@ -1,72 +1,101 @@
-import java.awt.Point;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Scanner;
 
 /**
- * Programa principal que cria um GameObject e aplica transformações dinâmicas (move, rotate, scale) conforme o problema M.
- * Lê dados de entrada e imprime a descrição final do objeto transformado.
- * Compatível com testes automáticos do Mooshak para o problema POO24-25 - Transformação de GameObjects.
+ * Programa principal que cria uma janela gráfica e permite controlar um GameObject com o teclado.
+ * Usa teclas para mover, rodar e escalar o objeto em tempo real, com KeyListener.
  * 
- * @author Alexandre Santos (71522), Nurio Pereira (72788)
- * @version 1.0 25/03/2025
+ * Teclas:
+ * - Setas: mover
+ * - R: rodar 15 graus
+ * - S: aumentar escala em 0.1
+ * 
+ * @author 
+ * Alexandre Santos (71522), Nurio Pereira (72788)
+ * @version 2.1 10/04/2025
  */
-public class Main {
-    public static void main(String[] args) {
-        try (Scanner sc = new Scanner(System.in)) {
-            String name = sc.nextLine();
-            double x = sc.nextDouble(), y = sc.nextDouble();
-            int layer = sc.nextInt();
-            double angle = sc.nextDouble(), scale = sc.nextDouble();
-            Transform transform = new Transform(x, y, layer, angle, scale);
-            sc.nextLine();
+public class Main extends JFrame implements KeyListener {
 
-            String[] data = sc.nextLine().trim().split(" ");
-            Collider collider;
+    private static final long serialVersionUID = 1L;
 
-            if (data.length == 3) {
-                double cx = Double.parseDouble(data[0]);
-                double cy = Double.parseDouble(data[1]);
-                double r = Double.parseDouble(data[2]);
-                collider = CircleCollider.create(transform, cx, cy, r);
-            } else {
-                List<Point.Double> vertices = new ArrayList<>();
-                for (int i = 0; i < data.length; i += 2) {
-                    double vx = Double.parseDouble(data[i]);
-                    double vy = Double.parseDouble(data[i + 1]);
-                    vertices.add(new Point.Double(vx, vy));
-                }
-                collider = PolygonCollider.create(transform, vertices);
-            }
+    private transient GameObject go;
+    private transient Transform transform;
+    private transient Collider collider;
+    private JLabel status;
 
-            GameObject go = new GameObject(name, transform, collider);
+    /**
+     * Construtor: inicializa o modelo do GameObject.
+     */
+    public Main() {
+        super("GameObject Controller");
 
-            while (sc.hasNextLine()) {
-                String line = sc.nextLine().trim();
-                if (line.isEmpty()) continue;
+        transform = new Transform(100, 100, 0, 0, 1.0);
+        collider = CircleCollider.create(transform, 0, 0, 30);
+        go = new GameObject("Player", transform, collider);
+    }
 
-                String[] parts = line.split(" ");
-                switch (parts[0]) {
-                    case "move":
-                        double dx = Double.parseDouble(parts[1]);
-                        double dy = Double.parseDouble(parts[2]);
-                        int dlayer = Integer.parseInt(parts[3]);
-                        transform.move(new Point((int) dx, (int) dy), dlayer);
-                        break;
-                    case "rotate":
-                        double dTheta = Double.parseDouble(parts[1]);
-                        transform.rotate(dTheta);
-                        break;
-                    case "scale":
-                        double dScale = Double.parseDouble(parts[1]);
-                        transform.scale(dScale);
-                        break;
-                }
+    /**
+     * Inicializa os componentes gráficos e listeners.
+     */
+    private void setupUI() {
+        setSize(400, 300);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
 
-                collider.adjustToTransform();
-            }
+        status = new JLabel(go.toString());
+        add(status, BorderLayout.SOUTH);
 
-            System.out.println(go);
+        addKeyListener(this);
+        setFocusable(true);
+        setFocusTraversalKeysEnabled(false);
+        setVisible(true);
+    }
+
+    /**
+     * Atualiza o estado da UI com os dados do GameObject.
+     */
+    private void updateState() {
+        collider.adjustToTransform();
+        status.setText(go.toString());
+        repaint();
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        int key = e.getKeyCode();
+        Point delta = new Point(0, 0);
+        int dLayer = 0;
+        double dAngle = 0;
+        double dScale = 0;
+
+        switch (key) {
+            case KeyEvent.VK_LEFT:  delta = new Point(-10, 0); break;
+            case KeyEvent.VK_RIGHT: delta = new Point(10, 0);  break;
+            case KeyEvent.VK_UP:    delta = new Point(0, -10); break;
+            case KeyEvent.VK_DOWN:  delta = new Point(0, 10);  break;
+            case KeyEvent.VK_R:     dAngle = 15;               break;
+            case KeyEvent.VK_S:     dScale = 0.1;              break;
         }
+
+        transform.move(delta, dLayer);
+        transform.rotate(dAngle);
+        transform.scale(dScale);
+        updateState();
+    }
+
+    @Override public void keyReleased(KeyEvent e) {}
+    @Override public void keyTyped(KeyEvent e) {}
+
+    /**
+     * Método principal. Inicializa o jogo.
+     */
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            Main app = new Main();
+            app.setupUI();
+        });
     }
 }
