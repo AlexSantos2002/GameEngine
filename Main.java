@@ -18,6 +18,7 @@ public class Main extends JFrame implements KeyListener {
     private BufferedImage background;
     private BufferedImage tankImage;
     private BufferedImage bulletImage;
+    private BufferedImage enemyImage;
     private GamePanel gamePanel;
 
     private final Set<Integer> activeKeys = new HashSet<>();
@@ -55,6 +56,7 @@ public class Main extends JFrame implements KeyListener {
             background = ImageIO.read(new File("Sprites/Background.png"));
             tankImage = ImageIO.read(new File("Sprites/Tank.png"));
             bulletImage = ImageIO.read(new File("Sprites/Bullet.png"));
+            enemyImage = ImageIO.read(new File("Sprites/Enemy.png"));
         } catch (IOException e) {
             System.err.println("Erro ao carregar imagens: " + e.getMessage());
         }
@@ -131,25 +133,27 @@ public class Main extends JFrame implements KeyListener {
             }
 
             for (GameObject obj : GameEngine.getInstance().getEnabled()) {
-                if (obj.name().equals("Player") && obj.collider() instanceof CircleCollider c && tankImage != null) {
-                    Graphics2D g2d = (Graphics2D) g.create();
-                    Point center = c.centroid();
-                    double angle = Math.toRadians(obj.transform().angle());
-                    double scale = obj.transform().scale() * 0.25;
+                Graphics2D g2d = (Graphics2D) g.create();
+                Point center = obj.collider().centroid();
+                double angle = Math.toRadians(obj.transform().angle());
+                double scale = obj.transform().scale() * 0.25;
 
-                    int imgWidth = tankImage.getWidth();
-                    int imgHeight = tankImage.getHeight();
+                BufferedImage sprite = switch (obj.name()) {
+                    case "Player" -> tankImage;
+                    case "Enemy" -> enemyImage;
+                    case "Bullet" -> bulletImage;
+                    default -> null;
+                };
+
+                if (sprite != null) {
+                    int imgWidth = sprite.getWidth();
+                    int imgHeight = sprite.getHeight();
                     int drawWidth = (int) (imgWidth * scale);
                     int drawHeight = (int) (imgHeight * scale);
 
                     g2d.translate(center.x, center.y);
                     g2d.rotate(angle);
-                    g2d.drawImage(tankImage, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight, null);
-                    g2d.dispose();
-                } else if (obj.name().equals("Bullet") && obj.collider() instanceof CircleCollider c && bulletImage != null) {
-                    Graphics2D g2d = (Graphics2D) g.create();
-                    Point center = c.centroid();
-                    g2d.drawImage(bulletImage, center.x - 4, center.y - 4, 8, 8, null);
+                    g2d.drawImage(sprite, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight, null);
                     g2d.dispose();
                 }
             }

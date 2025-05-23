@@ -1,5 +1,8 @@
 import java.awt.Point;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.awt.Dimension;
 import java.awt.Toolkit;
@@ -10,6 +13,12 @@ public class Behaviour implements IBehaviour {
     private Set<Integer> activeKeys;
     private long lastFireTime = 0;
     private final long fireCooldown = 1000;
+
+    private final Random random = new Random();
+    private final int tankRadius = 30;
+    private final Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+    private final List<GameObject> currentEnemies = new ArrayList<>();
+    private int enemyCount = 5;
 
     public void setControlledObject(GameObject go) {
         this.controlledObject = go;
@@ -33,14 +42,24 @@ public class Behaviour implements IBehaviour {
 
     @Override
     public void onUpdate() {
-        if (controlledObject == null || activeKeys == null) return;
+        if (controlledObject == null) return;
+
+        if (controlledObject.name().equals("Player")) {
+            handlePlayerInput();
+            updateEnemySpawner();
+        } else if (controlledObject.name().equals("Enemy")) {
+            updateEnemyAI();
+        }
+    }
+
+    private void handlePlayerInput() {
+        if (activeKeys == null) return;
 
         Point delta = new Point(0, 0);
         int dLayer = 0;
         double dAngle = 0;
         double dScale = 0;
 
-        // Movimento e rotação
         if (activeKeys.contains(KeyEvent.VK_LEFT))  delta.translate(-5, 0);
         if (activeKeys.contains(KeyEvent.VK_RIGHT)) delta.translate(5, 0);
         if (activeKeys.contains(KeyEvent.VK_UP))    delta.translate(0, -5);
@@ -48,7 +67,6 @@ public class Behaviour implements IBehaviour {
         if (activeKeys.contains(KeyEvent.VK_E))     dAngle += 5;
         if (activeKeys.contains(KeyEvent.VK_Q))     dAngle -= 5;
 
-        // Disparo com espaço (1 por segundo)
         long now = System.currentTimeMillis();
         if (activeKeys.contains(KeyEvent.VK_SPACE) && now - lastFireTime >= fireCooldown) {
             fireProjectile();
@@ -62,9 +80,72 @@ public class Behaviour implements IBehaviour {
         }
     }
 
+    private void updateEnemySpawner() {
+        currentEnemies.removeIf(enemy -> !GameEngine.getInstance().getEnabled().contains(enemy));
+
+        if (currentEnemies.isEmpty()) {
+            spawnEnemies(enemyCount);
+            enemyCount += 5;
+        }
+    }
+
+    private void spawnEnemies(int count) {
+        List<Point> takenSpots = new ArrayList<>();
+        Point playerPos = controlledObject.transform().position();
+
+        for (int i = 0; i < count; i++) {
+            Point pos;
+            int attempts = 0;
+            do {
+                int x = random.nextInt(screenSize.width - 2 * tankRadius) + tankRadius;
+                int y = random.nextInt(screenSize.height - 2 * tankRadius) + tankRadius;
+                pos = new Point(x, y);
+                attempts++;
+            } while ((pos.distance(playerPos) < 3 * tankRadius || overlaps(pos, takenSpots)) && attempts < 100);
+
+            Transform transform = new Transform(pos.x, pos.y, 0, 0, 1.0);
+            Collider collider = CircleCollider.create(transform, 0, 0, tankRadius);
+
+            GameObject enemy = new GameObject("Enemy", transform, collider, new Behaviour());
+            ((Behaviour) enemy.behaviour()).setControlledObject(enemy);
+
+            GameEngine.getInstance().add(enemy);
+            currentEnemies.add(enemy);
+            takenSpots.add(pos);
+        }
+    }
+
+    private boolean overlaps(Point p, List<Point> others) {
+        for (Point other : others) {
+            if (p.distance(other) < 2 * tankRadius) return true;
+        }
+        return false;
+    }
+
+    private void updateEnemyAI() {
+        long now = System.currentTimeMillis();
+        GameObject player = GameEngine.getInstance().getEnabled().stream()
+            .filter(go -> go.name().equals("Player"))
+            .findFirst().orElse(null);
+
+        if (player == null) return;
+
+        Point ep = controlledObject.transform().position();
+        Point pp = player.transform().position();
+        double angleRad = Math.atan2(pp.y - ep.y, pp.x - ep.x);
+        double angleDeg = Math.toDegrees(angleRad) + 90;
+
+        controlledObject.transform().rotate(angleDeg - controlledObject.transform().angle());
+
+        if (now - lastFireTime >= 3000) {
+            fireProjectile();
+            lastFireTime = now;
+        }
+    }
+
     private void fireProjectile() {
         Transform t = (Transform) controlledObject.transform();
-        double angleRad = Math.toRadians(t.angle() - 90); // Corrigir direção visual
+        double angleRad = Math.toRadians(t.angle() - 90);
         double dx = Math.cos(angleRad) * 10;
         double dy = Math.sin(angleRad) * 10;
 
@@ -74,17 +155,10 @@ public class Behaviour implements IBehaviour {
         GameObject bullet = new GameObject("Bullet", bulletT, bulletC, new IBehaviour() {
             private GameObject self;
 
-            @Override
-            public void onInit() {}
-
-            @Override
-            public void onEnabled() {}
-
-            @Override
-            public void onDisabled() {}
-
-            @Override
-            public void onDestroy() {}
+            @Override public void onInit() {}
+            @Override public void onEnabled() {}
+            @Override public void onDisabled() {}
+            @Override public void onDestroy() {}
 
             @Override
             public void onUpdate() {
@@ -95,11 +169,24 @@ public class Behaviour implements IBehaviour {
                 if (pos.x < 0 || pos.x > screen.width || pos.y < 0 || pos.y > screen.height) {
                     GameEngine.getInstance().destroy(self);
                 }
+
+                for (GameObject target : GameEngine.getInstance().getEnabled()) {
+                    if ((target.name().equals("Enemy") || target.name().equals("Player")) &&
+                        !target.equals(controlledObject) &&
+                        GameEngine.getInstance().detectCollision(self.collider(), target.collider())) {
+                        GameEngine.getInstance().destroy(self);
+                        GameEngine.getInstance().destroy(target);
+                        break;
+                    }
+                }
             }
 
             @Override
             public void onCollision(GameObject other) {
-                GameEngine.getInstance().destroy(self);
+                if (!other.name().equals(controlledObject.name())) {
+                    GameEngine.getInstance().destroy(self);
+                    GameEngine.getInstance().destroy(other);
+                }
             }
 
             @Override
@@ -115,8 +202,10 @@ public class Behaviour implements IBehaviour {
 
     @Override
     public void onCollision(GameObject other) {
+        if (controlledObject.name().equals("Enemy") && other.name().equals("Bullet")) {
+            GameEngine.getInstance().destroy(controlledObject);
+        }
     }
 
-    protected void playShootSound() {
-    }
+    protected void playShootSound() {}
 }

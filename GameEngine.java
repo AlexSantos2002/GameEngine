@@ -78,7 +78,18 @@ public class GameEngine {
         return collisions;
     }
 
-    private boolean detectCollision(ICollider a, ICollider b) {
-        return false;
+public boolean detectCollision(ICollider a, ICollider b) {
+    if (a instanceof CircleCollider && b instanceof CircleCollider) {
+        CircleCollider ca = (CircleCollider) a;
+        CircleCollider cb = (CircleCollider) b;
+
+        double dx = ca.centroid().x - cb.centroid().x;
+        double dy = ca.centroid().y - cb.centroid().y;
+        double distanceSq = dx * dx + dy * dy;
+        double radiusSum = ca.getRadius() + cb.getRadius();
+
+        return distanceSq <= radiusSum * radiusSum;
     }
+    return false;
+}
 }
