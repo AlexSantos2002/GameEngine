@@ -2,14 +2,16 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.LinkedHashMap;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Comparator;
-import java.util.Map.Entry;
 import java.awt.Point;
 
 public class GameEngine {
+
+    private static final GameEngine instance = new GameEngine();
+
+    public static GameEngine getInstance() {
+        return instance;
+    }
+
     private final List<GameObject> objects = new ArrayList<>();
     private final List<GameObject> enabledObjects = new ArrayList<>();
 
@@ -77,8 +79,6 @@ public class GameEngine {
     }
 
     private boolean detectCollision(ICollider a, ICollider b) {
-        // Reutilizar o método anterior de colisão
-        // Aqui entra a lógica já definida anteriormente
         return false;
     }
 }

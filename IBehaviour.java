@@ -5,4 +5,5 @@ public interface IBehaviour {
     void onDestroy();
     void onUpdate();
     void onCollision(GameObject other);
+    void setControlledObject(GameObject go);
 }
