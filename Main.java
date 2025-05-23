@@ -8,24 +8,11 @@ import java.util.HashSet;
 import java.util.Set;
 import javax.imageio.ImageIO;
 
-/**
- * Jogo com nave controlada por teclado.
- * 
- * Teclas:
- * - Setas: mover
- * - Q: rodar para a esquerda
- * - E: rodar para a direita
- * 
- * A nave é representada por Ship.png e o fundo por Background.png (pasta Sprites/).
- * O jogo abre maximizado e faz wrap-around nos limites da janela.
- */
 public class Main extends JFrame implements KeyListener {
 
     private static final long serialVersionUID = 1L;
 
     private transient GameObject go;
-    private transient Transform transform;
-    private transient Collider collider;
     private JLabel status;
     private BufferedImage background;
     private BufferedImage shipImage;
@@ -37,10 +24,19 @@ public class Main extends JFrame implements KeyListener {
     public Main() {
         super("GameObject Controller");
 
-        transform = new Transform(100, 100, 0, 0, 1.0);
-        collider = CircleCollider.create(transform, 0, 0, 30);
-        go = new GameObject("Player", transform, collider);
+        // Criação do transform e collider
+        Transform transform = new Transform(100, 100, 0, 0, 1.0);
+        Collider collider = CircleCollider.create(transform, 0, 0, 30);
 
+        // Comportamento da nave (controle por teclado)
+        Behaviour behaviour = new Behaviour();
+        behaviour.setActiveKeys(activeKeys);
+
+        // Criação do GameObject
+        go = new GameObject("Player", transform, collider, behaviour);
+        behaviour.setControlledObject(go);
+
+        // Carregamento de imagens
         try {
             background = ImageIO.read(new File("Sprites/Background.png"));
             shipImage = ImageIO.read(new File("Sprites/Ship.png"));
@@ -50,7 +46,7 @@ public class Main extends JFrame implements KeyListener {
     }
 
     private void setupUI() {
-        setExtendedState(JFrame.MAXIMIZED_BOTH); // Começa maximizado
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
@@ -69,21 +65,19 @@ public class Main extends JFrame implements KeyListener {
     }
 
     private void updateState() {
-        collider.adjustToTransform();
-        Point pos = transform.position();
+        go.collider().adjustToTransform();
+        Point pos = go.transform().position();
         int width = gamePanel.getWidth();
         int height = gamePanel.getHeight();
 
         int x = pos.x;
         int y = pos.y;
 
-        // Wrap-around horizontal
-        if (x < 0) transform.move(new Point(width, 0), 0);
-        else if (x > width) transform.move(new Point(-width, 0), 0);
-
-        // Wrap-around vertical
-        if (y < 0) transform.move(new Point(0, height), 0);
-        else if (y > height) transform.move(new Point(0, -height), 0);
+        // Wrap-around
+        if (x < 0) go.transform().move(new Point(width, 0), 0);
+        else if (x > width) go.transform().move(new Point(-width, 0), 0);
+        if (y < 0) go.transform().move(new Point(0, height), 0);
+        else if (y > height) go.transform().move(new Point(0, -height), 0);
 
         status.setText(go.toString());
         gamePanel.repaint();
@@ -91,24 +85,8 @@ public class Main extends JFrame implements KeyListener {
 
     private void startMovementLoop() {
         movementTimer = new Timer(16, e -> {
-            Point delta = new Point(0, 0);
-            int dLayer = 0;
-            double dAngle = 0;
-            double dScale = 0;
-
-            if (activeKeys.contains(KeyEvent.VK_LEFT))  delta.translate(-5, 0);
-            if (activeKeys.contains(KeyEvent.VK_RIGHT)) delta.translate(5, 0);
-            if (activeKeys.contains(KeyEvent.VK_UP))    delta.translate(0, -5);
-            if (activeKeys.contains(KeyEvent.VK_DOWN))  delta.translate(0, 5);
-            if (activeKeys.contains(KeyEvent.VK_E))     dAngle += 5;
-            if (activeKeys.contains(KeyEvent.VK_Q))     dAngle -= 5;
-
-            if (delta.x != 0 || delta.y != 0 || dAngle != 0 || dScale != 0) {
-                transform.move(delta, dLayer);
-                transform.rotate(dAngle);
-                transform.scale(dScale);
-                updateState();
-            }
+            go.behaviour().onUpdate();
+            updateState();
         });
         movementTimer.start();
     }
@@ -138,8 +116,8 @@ public class Main extends JFrame implements KeyListener {
                 Graphics2D g2d = (Graphics2D) g.create();
 
                 Point center = c.centroid();
-                double angle = Math.toRadians(transform.angle());
-                double scale = transform.scale() * 0.25;
+                double angle = Math.toRadians(go.transform().angle());
+                double scale = go.transform().scale() * 0.25;
 
                 int imgWidth = shipImage.getWidth();
                 int imgHeight = shipImage.getHeight();
