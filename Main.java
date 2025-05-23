@@ -19,12 +19,15 @@ public class Main extends JFrame implements KeyListener {
     private BufferedImage tankImage;
     private BufferedImage bulletImage;
     private BufferedImage enemyImage;
+    private BufferedImage heartImage;
     private GamePanel gamePanel;
 
     private final Set<Integer> activeKeys = new HashSet<>();
     private Timer movementTimer;
     private Clip backgroundClip;
     private File shootSoundFile = new File("Audio/Shoot.wav");
+
+    private int playerLives = 3;
 
     public Main() {
         super("GameObject Controller");
@@ -33,6 +36,7 @@ public class Main extends JFrame implements KeyListener {
         Collider collider = CircleCollider.create(transform, 0, 0, 30);
 
         Behaviour behaviour = new Behaviour() {
+            @Override
             protected void playShootSound() {
                 try {
                     AudioInputStream shootInput = AudioSystem.getAudioInputStream(shootSoundFile);
@@ -41,6 +45,16 @@ public class Main extends JFrame implements KeyListener {
                     shootClip.start();
                 } catch (Exception e) {
                     System.err.println("Erro ao tocar som de disparo: " + e.getMessage());
+                }
+            }
+
+            @Override
+            public void onCollision(GameObject other) {
+                if (getControlledObject().name().equals("Player") && other.name().equals("Bullet")) {
+                    playerLives--;
+                    if (playerLives <= 0) {
+                        restartGame();
+                    }
                 }
             }
         };
@@ -57,6 +71,7 @@ public class Main extends JFrame implements KeyListener {
             tankImage = ImageIO.read(new File("Sprites/Tank.png"));
             bulletImage = ImageIO.read(new File("Sprites/Bullet.png"));
             enemyImage = ImageIO.read(new File("Sprites/Enemy.png"));
+            heartImage = ImageIO.read(new File("Sprites/Heart.png"));
         } catch (IOException e) {
             System.err.println("Erro ao carregar imagens: " + e.getMessage());
         }
@@ -66,9 +81,47 @@ public class Main extends JFrame implements KeyListener {
             backgroundClip = AudioSystem.getClip();
             backgroundClip.open(audioInput);
             backgroundClip.loop(Clip.LOOP_CONTINUOUSLY);
-        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+        } catch (Exception e) {
             System.err.println("Erro ao carregar áudio: " + e.getMessage());
         }
+
+        setupUI();
+    }
+
+    private void restartGame() {
+        // Destrói todos os objetos ativos no GameEngine
+        for (GameObject obj : GameEngine.getInstance().getEnabled()) {
+            GameEngine.getInstance().destroy(obj);
+        }
+
+        // Reseta estados da lógica de jogo
+        Behaviour.resetGameState();
+
+        // Reinicializa o jogador
+        Transform transform = new Transform(100, 100, 0, 90, 1.0);
+        Collider collider = CircleCollider.create(transform, 0, 0, 30);
+
+        Behaviour behaviour = new Behaviour() {
+            @Override
+            protected void playShootSound() {
+                try {
+                    AudioInputStream shootInput = AudioSystem.getAudioInputStream(shootSoundFile);
+                    Clip shootClip = AudioSystem.getClip();
+                    shootClip.open(shootInput);
+                    shootClip.start();
+                } catch (Exception e) {
+                    System.err.println("Erro ao tocar som de disparo: " + e.getMessage());
+                }
+            }
+        };
+
+        behaviour.setActiveKeys(activeKeys);
+
+        go = new GameObject("Player", transform, collider, behaviour);
+        behaviour.setControlledObject(go);
+        GameEngine.getInstance().add(go);
+
+        playerLives = 3;
     }
 
     private void setupUI() {
@@ -95,6 +148,16 @@ public class Main extends JFrame implements KeyListener {
     private void updateState() {
         for (GameObject obj : GameEngine.getInstance().getEnabled()) {
             obj.collider().adjustToTransform();
+        }
+
+        // Verifica se o jogador foi atingido
+        if (Behaviour.wasPlayerHit()) {
+            playerLives--;
+            Behaviour.resetPlayerHit();
+            if (playerLives <= 0) {
+                restartGame();
+                return;
+            }
         }
 
         status.setText(go.toString());
@@ -157,13 +220,15 @@ public class Main extends JFrame implements KeyListener {
                     g2d.dispose();
                 }
             }
+
+            // Corações no canto superior esquerdo
+            for (int i = 0; i < playerLives; i++) {
+                g.drawImage(heartImage, 20 + i * 40, 20, 32, 32, null);
+            }
         }
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            Main app = new Main();
-            app.setupUI();
-        });
+        SwingUtilities.invokeLater(Main::new);
     }
 }

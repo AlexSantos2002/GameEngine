@@ -9,7 +9,7 @@ import java.awt.Toolkit;
 
 public class Behaviour implements IBehaviour {
 
-    private GameObject controlledObject;
+    protected GameObject controlledObject;
     private Set<Integer> activeKeys;
     private long lastFireTime = 0;
     private final long fireCooldown = 1000;
@@ -18,10 +18,29 @@ public class Behaviour implements IBehaviour {
     private final int tankRadius = 30;
     private final Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
     private final List<GameObject> currentEnemies = new ArrayList<>();
-    private int enemyCount = 5;
+    private static int enemyCount = 5;
+
+    private static boolean playerHit = false;
+
+    public static boolean wasPlayerHit() {
+        return playerHit;
+    }
+
+    public static void resetPlayerHit() {
+        playerHit = false;
+    }
+
+    public static void resetGameState() {
+        playerHit = false;
+        enemyCount = 5;
+    }
 
     public void setControlledObject(GameObject go) {
         this.controlledObject = go;
+    }
+
+    public GameObject getControlledObject() {
+        return controlledObject;
     }
 
     public void setActiveKeys(Set<Integer> keys) {
@@ -60,12 +79,12 @@ public class Behaviour implements IBehaviour {
         double dAngle = 0;
         double dScale = 0;
 
-        if (activeKeys.contains(KeyEvent.VK_LEFT))  delta.translate(-5, 0);
+        if (activeKeys.contains(KeyEvent.VK_LEFT)) delta.translate(-5, 0);
         if (activeKeys.contains(KeyEvent.VK_RIGHT)) delta.translate(5, 0);
-        if (activeKeys.contains(KeyEvent.VK_UP))    delta.translate(0, -5);
-        if (activeKeys.contains(KeyEvent.VK_DOWN))  delta.translate(0, 5);
-        if (activeKeys.contains(KeyEvent.VK_E))     dAngle += 5;
-        if (activeKeys.contains(KeyEvent.VK_Q))     dAngle -= 5;
+        if (activeKeys.contains(KeyEvent.VK_UP)) delta.translate(0, -5);
+        if (activeKeys.contains(KeyEvent.VK_DOWN)) delta.translate(0, 5);
+        if (activeKeys.contains(KeyEvent.VK_E)) dAngle += 5;
+        if (activeKeys.contains(KeyEvent.VK_Q)) dAngle -= 5;
 
         long now = System.currentTimeMillis();
         if (activeKeys.contains(KeyEvent.VK_SPACE) && now - lastFireTime >= fireCooldown) {
@@ -144,12 +163,12 @@ public class Behaviour implements IBehaviour {
     }
 
     private void fireProjectile() {
-        Transform t = (Transform) controlledObject.transform();
+        ITransform t = controlledObject.transform();
         double angleRad = Math.toRadians(t.angle() - 90);
         double dx = Math.cos(angleRad) * 10;
         double dy = Math.sin(angleRad) * 10;
 
-        Transform bulletT = new Transform(t.posX(), t.posY(), t.layer(), t.angle(), 1.0);
+        Transform bulletT = new Transform(((Transform) t).posX(), ((Transform) t).posY(), t.layer(), t.angle(), 1.0);
         Collider bulletC = CircleCollider.create(bulletT, 0, 0, 5);
 
         GameObject bullet = new GameObject("Bullet", bulletT, bulletC, new IBehaviour() {
@@ -168,26 +187,28 @@ public class Behaviour implements IBehaviour {
                 Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
                 if (pos.x < 0 || pos.x > screen.width || pos.y < 0 || pos.y > screen.height) {
                     GameEngine.getInstance().destroy(self);
+                    return;
                 }
 
                 for (GameObject target : GameEngine.getInstance().getEnabled()) {
                     if ((target.name().equals("Enemy") || target.name().equals("Player")) &&
                         !target.equals(controlledObject) &&
                         GameEngine.getInstance().detectCollision(self.collider(), target.collider())) {
+
+                        if (target.name().equals("Player")) {
+                            playerHit = true;
+                        } else {
+                            GameEngine.getInstance().destroy(target);
+                        }
+
                         GameEngine.getInstance().destroy(self);
-                        GameEngine.getInstance().destroy(target);
                         break;
                     }
                 }
             }
 
             @Override
-            public void onCollision(GameObject other) {
-                if (!other.name().equals(controlledObject.name())) {
-                    GameEngine.getInstance().destroy(self);
-                    GameEngine.getInstance().destroy(other);
-                }
-            }
+            public void onCollision(GameObject other) {}
 
             @Override
             public void setControlledObject(GameObject go) {

@@ -47,4 +47,6 @@ public interface ITransform {
      * @return escala atual
      */
     double scale();
+    double posX();
+    double posY();
 }
