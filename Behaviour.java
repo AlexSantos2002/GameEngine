@@ -42,8 +42,8 @@ public class Behaviour implements IBehaviour {
     }
 
     public static void resetScore() {
-    score = 0;
-}
+        score = 0;
+    }
 
     public void setControlledObject(GameObject go) {
         this.controlledObject = go;
@@ -105,6 +105,17 @@ public class Behaviour implements IBehaviour {
             controlledObject.transform().move(delta, dLayer);
             controlledObject.transform().rotate(dAngle);
         }
+
+        // Wrap-around da tela
+        Point pos = controlledObject.transform().position();
+        int width = screenSize.width;
+        int height = screenSize.height;
+
+        if (pos.x < 0) controlledObject.transform().move(new Point(width, 0), 0);
+        else if (pos.x > width) controlledObject.transform().move(new Point(-width, 0), 0);
+
+        if (pos.y < 0) controlledObject.transform().move(new Point(0, height), 0);
+        else if (pos.y > height) controlledObject.transform().move(new Point(0, -height), 0);
     }
 
     private void updateEnemySpawner() {
@@ -157,9 +168,20 @@ public class Behaviour implements IBehaviour {
 
         Point ep = controlledObject.transform().position();
         Point pp = player.transform().position();
-        double angleRad = Math.atan2(pp.y - ep.y, pp.x - ep.x);
-        double angleDeg = Math.toDegrees(angleRad) + 90;
 
+        double dx = pp.x - ep.x;
+        double dy = pp.y - ep.y;
+        double dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist > 1) {
+            double speed = 1.5;
+            int mx = (int) (dx / dist * speed);
+            int my = (int) (dy / dist * speed);
+            controlledObject.transform().move(new Point(mx, my), 0);
+        }
+
+        double angleRad = Math.atan2(dy, dx);
+        double angleDeg = Math.toDegrees(angleRad) + 90;
         controlledObject.transform().rotate(angleDeg - controlledObject.transform().angle());
 
         if (now - lastFireTime >= 3000) {
@@ -190,8 +212,7 @@ public class Behaviour implements IBehaviour {
                 if (self == null) return;
                 self.transform().move(new Point((int) dx, (int) dy), 0);
                 Point pos = self.transform().position();
-                Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
-                if (pos.x < 0 || pos.x > screen.width || pos.y < 0 || pos.y > screen.height) {
+                if (pos.x < 0 || pos.x > screenSize.width || pos.y < 0 || pos.y > screenSize.height) {
                     GameEngine.getInstance().destroy(self);
                     return;
                 }
@@ -215,11 +236,7 @@ public class Behaviour implements IBehaviour {
             }
 
             @Override public void onCollision(GameObject other) {}
-
-            @Override
-            public void setControlledObject(GameObject go) {
-                this.self = go;
-            }
+            @Override public void setControlledObject(GameObject go) { this.self = go; }
         });
 
         bullet.behaviour().setControlledObject(bullet);
