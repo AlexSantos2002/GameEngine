@@ -21,6 +21,7 @@ public class Behaviour implements IBehaviour {
     private static int enemyCount = 5;
 
     private static boolean playerHit = false;
+    private static int score = 0;
 
     public static boolean wasPlayerHit() {
         return playerHit;
@@ -33,7 +34,16 @@ public class Behaviour implements IBehaviour {
     public static void resetGameState() {
         playerHit = false;
         enemyCount = 5;
+        score = 0;
     }
+
+    public static int getScore() {
+        return score;
+    }
+
+    public static void resetScore() {
+    score = 0;
+}
 
     public void setControlledObject(GameObject go) {
         this.controlledObject = go;
@@ -77,14 +87,13 @@ public class Behaviour implements IBehaviour {
         Point delta = new Point(0, 0);
         int dLayer = 0;
         double dAngle = 0;
-        double dScale = 0;
 
-        if (activeKeys.contains(KeyEvent.VK_LEFT)) delta.translate(-5, 0);
+        if (activeKeys.contains(KeyEvent.VK_LEFT))  delta.translate(-5, 0);
         if (activeKeys.contains(KeyEvent.VK_RIGHT)) delta.translate(5, 0);
-        if (activeKeys.contains(KeyEvent.VK_UP)) delta.translate(0, -5);
-        if (activeKeys.contains(KeyEvent.VK_DOWN)) delta.translate(0, 5);
-        if (activeKeys.contains(KeyEvent.VK_E)) dAngle += 5;
-        if (activeKeys.contains(KeyEvent.VK_Q)) dAngle -= 5;
+        if (activeKeys.contains(KeyEvent.VK_UP))    delta.translate(0, -5);
+        if (activeKeys.contains(KeyEvent.VK_DOWN))  delta.translate(0, 5);
+        if (activeKeys.contains(KeyEvent.VK_E))     dAngle += 5;
+        if (activeKeys.contains(KeyEvent.VK_Q))     dAngle -= 5;
 
         long now = System.currentTimeMillis();
         if (activeKeys.contains(KeyEvent.VK_SPACE) && now - lastFireTime >= fireCooldown) {
@@ -92,16 +101,14 @@ public class Behaviour implements IBehaviour {
             lastFireTime = now;
         }
 
-        if (delta.x != 0 || delta.y != 0 || dAngle != 0 || dScale != 0) {
+        if (delta.x != 0 || delta.y != 0 || dAngle != 0) {
             controlledObject.transform().move(delta, dLayer);
             controlledObject.transform().rotate(dAngle);
-            controlledObject.transform().scale(dScale);
         }
     }
 
     private void updateEnemySpawner() {
         currentEnemies.removeIf(enemy -> !GameEngine.getInstance().getEnabled().contains(enemy));
-
         if (currentEnemies.isEmpty()) {
             spawnEnemies(enemyCount);
             enemyCount += 5;
@@ -127,7 +134,6 @@ public class Behaviour implements IBehaviour {
 
             GameObject enemy = new GameObject("Enemy", transform, collider, new Behaviour());
             ((Behaviour) enemy.behaviour()).setControlledObject(enemy);
-
             GameEngine.getInstance().add(enemy);
             currentEnemies.add(enemy);
             takenSpots.add(pos);
@@ -199,6 +205,7 @@ public class Behaviour implements IBehaviour {
                             playerHit = true;
                         } else {
                             GameEngine.getInstance().destroy(target);
+                            score++;
                         }
 
                         GameEngine.getInstance().destroy(self);
@@ -207,8 +214,7 @@ public class Behaviour implements IBehaviour {
                 }
             }
 
-            @Override
-            public void onCollision(GameObject other) {}
+            @Override public void onCollision(GameObject other) {}
 
             @Override
             public void setControlledObject(GameObject go) {
@@ -225,6 +231,7 @@ public class Behaviour implements IBehaviour {
     public void onCollision(GameObject other) {
         if (controlledObject.name().equals("Enemy") && other.name().equals("Bullet")) {
             GameEngine.getInstance().destroy(controlledObject);
+            score++;
         }
     }
 

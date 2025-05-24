@@ -47,16 +47,6 @@ public class Main extends JFrame implements KeyListener {
                     System.err.println("Erro ao tocar som de disparo: " + e.getMessage());
                 }
             }
-
-            @Override
-            public void onCollision(GameObject other) {
-                if (getControlledObject().name().equals("Player") && other.name().equals("Bullet")) {
-                    playerLives--;
-                    if (playerLives <= 0) {
-                        restartGame();
-                    }
-                }
-            }
         };
 
         behaviour.setActiveKeys(activeKeys);
@@ -89,15 +79,13 @@ public class Main extends JFrame implements KeyListener {
     }
 
     private void restartGame() {
-        // Destrói todos os objetos ativos no GameEngine
         for (GameObject obj : GameEngine.getInstance().getEnabled()) {
             GameEngine.getInstance().destroy(obj);
         }
 
-        // Reseta estados da lógica de jogo
         Behaviour.resetGameState();
+        Behaviour.resetScore();
 
-        // Reinicializa o jogador
         Transform transform = new Transform(100, 100, 0, 90, 1.0);
         Collider collider = CircleCollider.create(transform, 0, 0, 30);
 
@@ -150,7 +138,6 @@ public class Main extends JFrame implements KeyListener {
             obj.collider().adjustToTransform();
         }
 
-        // Verifica se o jogador foi atingido
         if (Behaviour.wasPlayerHit()) {
             playerLives--;
             Behaviour.resetPlayerHit();
@@ -221,10 +208,16 @@ public class Main extends JFrame implements KeyListener {
                 }
             }
 
-            // Corações no canto superior esquerdo
             for (int i = 0; i < playerLives; i++) {
                 g.drawImage(heartImage, 20 + i * 40, 20, 32, 32, null);
             }
+
+            // Pontuação
+            g.setColor(Color.WHITE);
+            g.setFont(new Font("Arial", Font.BOLD, 24));
+            String scoreText = "Score: " + Behaviour.getScore();
+            int scoreWidth = g.getFontMetrics().stringWidth(scoreText);
+            g.drawString(scoreText, getWidth() - scoreWidth - 20, 40);
         }
     }
 
