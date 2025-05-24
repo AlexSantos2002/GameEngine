@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.Random;
 
-
 public class Behaviour implements IBehaviour {
 
     protected GameObject controlledObject;
@@ -23,6 +22,11 @@ public class Behaviour implements IBehaviour {
     private static boolean playerHit = false;
     private static int score = 0;
 
+    private long lastShieldTime = 0;
+    private final long shieldInterval = 5000;
+    private static boolean shieldActive = false;
+    private static int shieldHitsLeft = 0;
+
     public static boolean wasPlayerHit() {
         return playerHit;
     }
@@ -35,6 +39,8 @@ public class Behaviour implements IBehaviour {
         playerHit = false;
         enemyCount = 5;
         score = 0;
+        shieldActive = false;
+        shieldHitsLeft = 0;
     }
 
     public static int getScore() {
@@ -43,6 +49,10 @@ public class Behaviour implements IBehaviour {
 
     public static void resetScore() {
         score = 0;
+    }
+
+    public static boolean isShieldActive() {
+        return shieldActive;
     }
 
     public void setControlledObject(GameObject go) {
@@ -69,6 +79,7 @@ public class Behaviour implements IBehaviour {
         if (controlledObject.name().equals("Player")) {
             handlePlayerInput();
             updateEnemySpawner();
+            spawnShieldIfNeeded();
         } else if (controlledObject.name().equals("Enemy")) {
             updateEnemyAI();
         }
@@ -98,7 +109,6 @@ public class Behaviour implements IBehaviour {
             controlledObject.transform().rotate(dAngle);
         }
 
-        // Wrap-around
         Point pos = controlledObject.transform().position();
         int width = screenSize.width;
         int height = screenSize.height;
@@ -179,6 +189,45 @@ public class Behaviour implements IBehaviour {
         }
     }
 
+    private void spawnShieldIfNeeded() {
+        long now = System.currentTimeMillis();
+        if (now - lastShieldTime >= shieldInterval) {
+            lastShieldTime = now;
+
+            int x = random.nextInt(screenSize.width - 60) + 30;
+            int y = random.nextInt(screenSize.height - 60) + 30;
+
+            Transform t = new Transform(x, y, 0, 0, 0.75);
+            Collider c = CircleCollider.create(t, 0, 0, 25);
+
+            GameObject shield = new GameObject("Shield", t, c, new IBehaviour() {
+                private GameObject self;
+
+                @Override public void setControlledObject(GameObject go) { self = go; }
+                @Override public void onInit() {}
+                @Override public void onEnabled() {}
+                @Override public void onDisabled() {}
+                @Override public void onDestroy() {}
+
+                @Override
+                public void onUpdate() {
+                    GameObject player = GameEngine.getInstance().getEnabled().stream()
+                            .filter(go -> go.name().equals("Player")).findFirst().orElse(null);
+                    if (player != null && GameEngine.getInstance().detectCollision(self.collider(), player.collider())) {
+                        GameEngine.getInstance().destroy(self);
+                        shieldActive = true;
+                        shieldHitsLeft = 3;
+                    }
+                }
+
+                @Override public void onCollision(GameObject other) {}
+            });
+
+            shield.behaviour().setControlledObject(shield);
+            GameEngine.getInstance().add(shield);
+        }
+    }
+
     private void fireProjectile() {
         ITransform t = controlledObject.transform();
         double angleRad = Math.toRadians(t.angle() - 90);
@@ -213,7 +262,14 @@ public class Behaviour implements IBehaviour {
                             GameEngine.getInstance().detectCollision(self.collider(), target.collider())) {
 
                         if (target.name().equals("Player")) {
-                            playerHit = true;
+                            if (shieldActive) {
+                                shieldHitsLeft--;
+                                if (shieldHitsLeft <= 0) {
+                                    shieldActive = false;
+                                }
+                            } else {
+                                playerHit = true;
+                            }
                         } else {
                             Main.addExplosion(target.collider().centroid());
                             GameEngine.getInstance().destroy(target);

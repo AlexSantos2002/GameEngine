@@ -1,3 +1,4 @@
+// Main.java atualizado com suporte para Shield e Bubble
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -17,11 +18,7 @@ public class Main extends JFrame implements KeyListener {
 
     private transient GameObject go;
     private JLabel status;
-    private BufferedImage background;
-    private BufferedImage tankImage;
-    private BufferedImage bulletImage;
-    private BufferedImage enemyImage;
-    private BufferedImage heartImage;
+    private BufferedImage background, tankImage, bulletImage, enemyImage, heartImage, shieldImage, bubbleImage;
     private BufferedImage[] explosionFrames;
     private GamePanel gamePanel;
 
@@ -94,6 +91,8 @@ public class Main extends JFrame implements KeyListener {
             bulletImage = ImageIO.read(new File("Sprites/Bullet.png"));
             enemyImage = ImageIO.read(new File("Sprites/Enemy.png"));
             heartImage = ImageIO.read(new File("Sprites/Heart.png"));
+            shieldImage = ImageIO.read(new File("Sprites/Shield.png"));
+            bubbleImage = ImageIO.read(new File("Sprites/Bubble.png"));
 
             explosionFrames = new BufferedImage[10];
             for (int i = 0; i < 10; i++) {
@@ -236,6 +235,7 @@ public class Main extends JFrame implements KeyListener {
                     case "Player" -> tankImage;
                     case "Enemy" -> enemyImage;
                     case "Bullet" -> bulletImage;
+                    case "Shield" -> shieldImage;
                     default -> null;
                 };
 
@@ -252,6 +252,25 @@ public class Main extends JFrame implements KeyListener {
                 }
             }
 
+            // Bubble (escudo ativo)
+             if (Behaviour.isShieldActive())
+             {
+                Graphics2D g2d = (Graphics2D) g.create();
+                Point center = go.collider().centroid();
+                double angle = Math.toRadians(go.transform().angle());
+                double scale = go.transform().scale() * 3.5;
+
+                int imgWidth = bubbleImage.getWidth();
+                int imgHeight = bubbleImage.getHeight();
+                int drawWidth = (int) (imgWidth * scale);
+                int drawHeight = (int) (imgHeight * scale);
+
+                g2d.translate(center.x, center.y);
+                g2d.rotate(angle);
+                g2d.drawImage(bubbleImage, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight, null);
+                g2d.dispose();
+            }
+
             for (int i = 0; i < playerLives; i++) {
                 g.drawImage(heartImage, 20 + i * 40, 20, 32, 32, null);
             }
@@ -260,7 +279,6 @@ public class Main extends JFrame implements KeyListener {
             g.setFont(new Font("Arial", Font.BOLD, 24));
             g.drawString("Score: " + Behaviour.getScore(), getWidth() - 150, 40);
 
-            // Animações de explosão
             long now = System.currentTimeMillis();
             int duration = 1500;
             int frameCount = explosionFrames.length;
