@@ -114,7 +114,7 @@ public class Behaviour implements IBehaviour {
         currentEnemies.removeIf(enemy -> !GameEngine.getInstance().getEnabled().contains(enemy));
         if (currentEnemies.isEmpty()) {
             spawnEnemies(enemyCount);
-            enemyCount += 5;
+            enemyCount++;
         }
     }
 

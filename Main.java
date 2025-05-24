@@ -31,6 +31,8 @@ public class Main extends JFrame implements KeyListener {
     private final File shootSoundFile = new File("Audio/Shoot.wav");
 
     private int playerLives = 3;
+    private boolean isPaused = false;
+    private boolean gameOver = false;
 
     public static final List<Explosion> explosions = new ArrayList<>();
 
@@ -175,27 +177,36 @@ public class Main extends JFrame implements KeyListener {
             playerLives--;
             Behaviour.resetPlayerHit();
             if (playerLives <= 0) {
-                restartGame();
-                return;
+                isPaused = true;
+                gameOver = true;
             }
         }
 
         status.setText(go.toString());
-        gamePanel.repaint();
     }
 
     private void startMovementLoop() {
         movementTimer = new Timer(16, _ -> {
-            for (GameObject obj : GameEngine.getInstance().getEnabled()) {
-                obj.behaviour().onUpdate();
+            if (!isPaused) {
+                for (GameObject obj : GameEngine.getInstance().getEnabled()) {
+                    obj.behaviour().onUpdate();
+                }
+                updateState();
             }
-            updateState();
+            gamePanel.repaint();
         });
         movementTimer.start();
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
+        if (gameOver && e.getKeyCode() == KeyEvent.VK_ENTER) {
+            gameOver = false;
+            isPaused = false;
+            restartGame();
+            return;
+        }
+
         activeKeys.add(e.getKeyCode());
     }
 
@@ -249,7 +260,7 @@ public class Main extends JFrame implements KeyListener {
             g.setFont(new Font("Arial", Font.BOLD, 24));
             g.drawString("Score: " + Behaviour.getScore(), getWidth() - 150, 40);
 
-            // Desenhar animações de explosão
+            // Animações de explosão
             long now = System.currentTimeMillis();
             int duration = 1500;
             int frameCount = explosionFrames.length;
@@ -263,6 +274,14 @@ public class Main extends JFrame implements KeyListener {
                     BufferedImage img = explosionFrames[frame];
                     g.drawImage(img, exp.position.x - 48, exp.position.y - 48, 96, 96, null);
                 }
+            }
+
+            if (gameOver) {
+                g.setColor(Color.RED);
+                g.setFont(new Font("Arial", Font.BOLD, 36));
+                String msg = "Pressione ENTER para jogar novamente!";
+                int msgWidth = g.getFontMetrics().stringWidth(msg);
+                g.drawString(msg, (getWidth() - msgWidth) / 2, getHeight() / 2);
             }
         }
     }
