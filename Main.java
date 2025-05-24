@@ -229,15 +229,30 @@ public class Main extends JFrame implements KeyListener {
                 Graphics2D g2d = (Graphics2D) g.create();
                 Point center = obj.collider().centroid();
                 double angle = Math.toRadians(obj.transform().angle());
-                double scale = obj.transform().scale() * 0.25;
+                double scale;
+                if (obj.name().startsWith("Soldier")) {
+                    scale = obj.transform().scale() * 0.85;
+                } else {
+                    scale = obj.transform().scale() * 0.25;
+                }
 
-                BufferedImage sprite = switch (obj.name()) {
-                    case "Player" -> tankImage;
-                    case "Enemy" -> enemyImage;
-                    case "Bullet" -> bulletImage;
-                    case "Shield" -> shieldImage;
-                    default -> null;
-                };
+                BufferedImage sprite = null;
+
+                try {
+                    switch (obj.name()) {
+                        case "Player" -> sprite = tankImage;
+                        case "Enemy" -> sprite = enemyImage;
+                        case "Bullet" -> sprite = bulletImage;
+                        case "Shield" -> sprite = shieldImage;
+                        case "Bullet2" -> sprite = ImageIO.read(new File("Sprites/Bullet2.png"));
+                        case "Soldier" -> {
+                            String state = Behaviour.getSoldierSprite(obj);
+                            sprite = ImageIO.read(new File("Sprites/" + state + ".png"));
+                        }
+                    }
+                } catch (IOException e) {
+                    System.err.println("Erro ao carregar sprite: " + e.getMessage());
+                }
 
                 if (sprite != null) {
                     int imgWidth = sprite.getWidth();
@@ -253,8 +268,7 @@ public class Main extends JFrame implements KeyListener {
             }
 
             // Bubble (escudo ativo)
-             if (Behaviour.isShieldActive())
-             {
+            if (Behaviour.isShieldActive()) {
                 Graphics2D g2d = (Graphics2D) g.create();
                 Point center = go.collider().centroid();
                 double angle = Math.toRadians(go.transform().angle());
@@ -271,19 +285,21 @@ public class Main extends JFrame implements KeyListener {
                 g2d.dispose();
             }
 
+            // Corações (vidas)
             for (int i = 0; i < playerLives; i++) {
                 g.drawImage(heartImage, 20 + i * 40, 20, 32, 32, null);
             }
 
+            // Pontuação
             g.setColor(Color.WHITE);
             g.setFont(new Font("Arial", Font.BOLD, 24));
             g.drawString("Score: " + Behaviour.getScore(), getWidth() - 150, 40);
 
+            // Explosões
             long now = System.currentTimeMillis();
             int duration = 1500;
             int frameCount = explosionFrames.length;
             int frameTime = duration / frameCount;
-
             explosions.removeIf(exp -> now - exp.startTime >= duration);
 
             for (Explosion exp : explosions) {
