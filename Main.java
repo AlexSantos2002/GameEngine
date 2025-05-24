@@ -185,7 +185,7 @@ public class Main extends JFrame implements KeyListener {
     }
 
     private void startMovementLoop() {
-        movementTimer = new Timer(16, e -> {
+        movementTimer = new Timer(16, _ -> {
             for (GameObject obj : GameEngine.getInstance().getEnabled()) {
                 obj.behaviour().onUpdate();
             }

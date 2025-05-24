@@ -63,8 +63,8 @@ public class GameEngine {
                 GameObject b = enabledObjects.get(j);
                 if (a.transform().layer() != b.transform().layer()) continue;
                 if (detectCollision(a.collider(), b.collider())) {
-                    collisions.computeIfAbsent(a, k -> new ArrayList<>()).add(b);
-                    collisions.computeIfAbsent(b, k -> new ArrayList<>()).add(a);
+                    collisions.computeIfAbsent(a, _ -> new ArrayList<>()).add(b);
+                    collisions.computeIfAbsent(b, _ -> new ArrayList<>()).add(a);
                 }
             }
         }
