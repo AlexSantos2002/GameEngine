@@ -1,11 +1,11 @@
-import java.awt.Point;
+import java.awt.*;
 import java.awt.event.KeyEvent;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.Set;
-import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.Random;
+
 
 public class Behaviour implements IBehaviour {
 
@@ -57,17 +57,10 @@ public class Behaviour implements IBehaviour {
         this.activeKeys = keys;
     }
 
-    @Override
-    public void onInit() {}
-
-    @Override
-    public void onEnabled() {}
-
-    @Override
-    public void onDisabled() {}
-
-    @Override
-    public void onDestroy() {}
+    @Override public void onInit() {}
+    @Override public void onEnabled() {}
+    @Override public void onDisabled() {}
+    @Override public void onDestroy() {}
 
     @Override
     public void onUpdate() {
@@ -85,7 +78,6 @@ public class Behaviour implements IBehaviour {
         if (activeKeys == null) return;
 
         Point delta = new Point(0, 0);
-        int dLayer = 0;
         double dAngle = 0;
 
         if (activeKeys.contains(KeyEvent.VK_LEFT))  delta.translate(-5, 0);
@@ -102,11 +94,11 @@ public class Behaviour implements IBehaviour {
         }
 
         if (delta.x != 0 || delta.y != 0 || dAngle != 0) {
-            controlledObject.transform().move(delta, dLayer);
+            controlledObject.transform().move(delta, 0);
             controlledObject.transform().rotate(dAngle);
         }
 
-        // Wrap-around da tela
+        // Wrap-around
         Point pos = controlledObject.transform().position();
         int width = screenSize.width;
         int height = screenSize.height;
@@ -161,14 +153,11 @@ public class Behaviour implements IBehaviour {
     private void updateEnemyAI() {
         long now = System.currentTimeMillis();
         GameObject player = GameEngine.getInstance().getEnabled().stream()
-            .filter(go -> go.name().equals("Player"))
-            .findFirst().orElse(null);
-
+                .filter(go -> go.name().equals("Player")).findFirst().orElse(null);
         if (player == null) return;
 
         Point ep = controlledObject.transform().position();
         Point pp = player.transform().position();
-
         double dx = pp.x - ep.x;
         double dy = pp.y - ep.y;
         double dist = Math.sqrt(dx * dx + dy * dy);
@@ -212,6 +201,7 @@ public class Behaviour implements IBehaviour {
                 if (self == null) return;
                 self.transform().move(new Point((int) dx, (int) dy), 0);
                 Point pos = self.transform().position();
+
                 if (pos.x < 0 || pos.x > screenSize.width || pos.y < 0 || pos.y > screenSize.height) {
                     GameEngine.getInstance().destroy(self);
                     return;
@@ -219,12 +209,13 @@ public class Behaviour implements IBehaviour {
 
                 for (GameObject target : GameEngine.getInstance().getEnabled()) {
                     if ((target.name().equals("Enemy") || target.name().equals("Player")) &&
-                        !target.equals(controlledObject) &&
-                        GameEngine.getInstance().detectCollision(self.collider(), target.collider())) {
+                            !target.equals(controlledObject) &&
+                            GameEngine.getInstance().detectCollision(self.collider(), target.collider())) {
 
                         if (target.name().equals("Player")) {
                             playerHit = true;
                         } else {
+                            Main.addExplosion(target.collider().centroid());
                             GameEngine.getInstance().destroy(target);
                             score++;
                         }
@@ -247,6 +238,7 @@ public class Behaviour implements IBehaviour {
     @Override
     public void onCollision(GameObject other) {
         if (controlledObject.name().equals("Enemy") && other.name().equals("Bullet")) {
+            Main.addExplosion(controlledObject.collider().centroid());
             GameEngine.getInstance().destroy(controlledObject);
             score++;
         }

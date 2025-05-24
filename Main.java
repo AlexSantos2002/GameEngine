@@ -4,10 +4,12 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
 import javax.imageio.ImageIO;
 import javax.sound.sampled.*;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
 
 public class Main extends JFrame implements KeyListener {
 
@@ -20,14 +22,39 @@ public class Main extends JFrame implements KeyListener {
     private BufferedImage bulletImage;
     private BufferedImage enemyImage;
     private BufferedImage heartImage;
+    private BufferedImage[] explosionFrames;
     private GamePanel gamePanel;
 
     private final Set<Integer> activeKeys = new HashSet<>();
     private Timer movementTimer;
     private Clip backgroundClip;
-    private File shootSoundFile = new File("Audio/Shoot.wav");
+    private final File shootSoundFile = new File("Audio/Shoot.wav");
 
     private int playerLives = 3;
+
+    public static final List<Explosion> explosions = new ArrayList<>();
+
+    public static class Explosion {
+        public final Point position;
+        public final long startTime;
+
+        public Explosion(Point position) {
+            this.position = position;
+            this.startTime = System.currentTimeMillis();
+        }
+    }
+
+    public static void addExplosion(Point pos) {
+        explosions.add(new Explosion(pos));
+        try {
+            AudioInputStream audioInput = AudioSystem.getAudioInputStream(new File("Audio/Explosion.wav"));
+            Clip clip = AudioSystem.getClip();
+            clip.open(audioInput);
+            clip.start();
+        } catch (Exception e) {
+            System.err.println("Erro ao tocar som de explosão: " + e.getMessage());
+        }
+    }
 
     public Main() {
         super("GameObject Controller");
@@ -50,18 +77,27 @@ public class Main extends JFrame implements KeyListener {
         };
 
         behaviour.setActiveKeys(activeKeys);
-
         go = new GameObject("Player", transform, collider, behaviour);
         behaviour.setControlledObject(go);
-
         GameEngine.getInstance().add(go);
 
+        loadAssets();
+        setupUI();
+    }
+
+    private void loadAssets() {
         try {
             background = ImageIO.read(new File("Sprites/Background.png"));
             tankImage = ImageIO.read(new File("Sprites/Tank.png"));
             bulletImage = ImageIO.read(new File("Sprites/Bullet.png"));
             enemyImage = ImageIO.read(new File("Sprites/Enemy.png"));
             heartImage = ImageIO.read(new File("Sprites/Heart.png"));
+
+            explosionFrames = new BufferedImage[10];
+            for (int i = 0; i < 10; i++) {
+                explosionFrames[i] = ImageIO.read(new File("Sprites/Explosion_" + (i + 1) + ".png"));
+            }
+
         } catch (IOException e) {
             System.err.println("Erro ao carregar imagens: " + e.getMessage());
         }
@@ -74,8 +110,6 @@ public class Main extends JFrame implements KeyListener {
         } catch (Exception e) {
             System.err.println("Erro ao carregar áudio: " + e.getMessage());
         }
-
-        setupUI();
     }
 
     private void restartGame() {
@@ -85,6 +119,7 @@ public class Main extends JFrame implements KeyListener {
 
         Behaviour.resetGameState();
         Behaviour.resetScore();
+        explosions.clear();
 
         Transform transform = new Transform(100, 100, 0, 90, 1.0);
         Collider collider = CircleCollider.create(transform, 0, 0, 30);
@@ -104,7 +139,6 @@ public class Main extends JFrame implements KeyListener {
         };
 
         behaviour.setActiveKeys(activeKeys);
-
         go = new GameObject("Player", transform, collider, behaviour);
         behaviour.setControlledObject(go);
         GameEngine.getInstance().add(go);
@@ -115,7 +149,6 @@ public class Main extends JFrame implements KeyListener {
     private void setupUI() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
-
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setUndecorated(true);
 
@@ -212,12 +245,25 @@ public class Main extends JFrame implements KeyListener {
                 g.drawImage(heartImage, 20 + i * 40, 20, 32, 32, null);
             }
 
-            // Pontuação
             g.setColor(Color.WHITE);
             g.setFont(new Font("Arial", Font.BOLD, 24));
-            String scoreText = "Score: " + Behaviour.getScore();
-            int scoreWidth = g.getFontMetrics().stringWidth(scoreText);
-            g.drawString(scoreText, getWidth() - scoreWidth - 20, 40);
+            g.drawString("Score: " + Behaviour.getScore(), getWidth() - 150, 40);
+
+            // Desenhar animações de explosão
+            long now = System.currentTimeMillis();
+            int duration = 1500;
+            int frameCount = explosionFrames.length;
+            int frameTime = duration / frameCount;
+
+            explosions.removeIf(exp -> now - exp.startTime >= duration);
+
+            for (Explosion exp : explosions) {
+                int frame = (int) ((now - exp.startTime) / frameTime);
+                if (frame >= 0 && frame < explosionFrames.length) {
+                    BufferedImage img = explosionFrames[frame];
+                    g.drawImage(img, exp.position.x - 48, exp.position.y - 48, 96, 96, null);
+                }
+            }
         }
     }
 
