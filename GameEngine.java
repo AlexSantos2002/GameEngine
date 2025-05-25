@@ -4,29 +4,69 @@ import java.util.Map;
 import java.util.LinkedHashMap;
 import java.awt.Point;
 
+/**
+ * Motor principal do jogo que gere o ciclo de vida dos GameObjects.
+ * Responsável por adicionar, ativar/desativar, atualizar e destruir objetos,
+ * bem como detetar colisões e simular frames de movimento no jogo.
+ * Implementado como Singleton, permitindo uma única instância acessível globalmente.
+ * 
+ * @author 
+ * Alexandre Santos (71522), Nurio Pereira (72788)
+ * @version 24/05/2025
+ * 
+ * @inv A instância de GameEngine é única (Singleton).
+ * Todos os GameObjects ativos são atualizados a cada frame.
+ */
+
 public class GameEngine {
 
     private static final GameEngine instance = new GameEngine();
 
+    /**
+     * Construtor privado para garantir que a classe é um singleton.
+     * @return Instância única do GameEngine
+     */
     public static GameEngine getInstance() {
         return instance;
     }
 
+    /**
+     * Lista de objetos do jogo.
+     * Contém todos os objetos, independentemente de estarem ativos ou não.
+     */
     private final List<GameObject> objects = new ArrayList<>();
+
+    /**
+     * Lista de objetos ativos no jogo.
+     */
     private final List<GameObject> enabledObjects = new ArrayList<>();
 
+    /**
+     * Adiciona um objeto ao jogo.
+     * @param go
+     */
     public void add(GameObject go) {
         objects.add(go);
         enabledObjects.add(go);
         go.behaviour().onInit();
     }
 
+    /**
+     * Remove um objeto do jogo.
+     * Se o objeto estiver ativo, ele será desativado antes de ser removido.
+     * @param go Objeto a ser removido
+     */
     public void destroy(GameObject go) {
         objects.remove(go);
         enabledObjects.remove(go);
         go.behaviour().onDestroy();
     }
 
+    /**
+     * Ativa um objeto do jogo.
+     * Se o objeto já estiver ativo, não faz nada.
+     * @param go Objeto a ser ativado
+     */
     public void enable(GameObject go) {
         if (!enabledObjects.contains(go)) {
             enabledObjects.add(go);
@@ -34,16 +74,30 @@ public class GameEngine {
         }
     }
 
+    /**
+     * Desativa um objeto do jogo.
+     * @param go Objeto a ser desativado
+     */
     public void disable(GameObject go) {
         if (enabledObjects.remove(go)) {
             go.behaviour().onDisabled();
         }
     }
 
+    /**
+     * Obtém todos os objetos do jogo.
+     * @return Lista de objetos do jogo
+     */
     public List<GameObject> getEnabled() {
         return new ArrayList<>(enabledObjects);
     }
 
+    /**
+     * Simula o movimento dos objetos do jogo por um número de frames.
+     * @param frames
+     * @param velocities
+     * @return
+     */
     public Map<GameObject, List<GameObject>> simulate(int frames, Map<GameObject, double[]> velocities) {
         for (int i = 0; i < frames; i++) {
             for (GameObject go : enabledObjects) {
@@ -78,6 +132,13 @@ public class GameEngine {
         return collisions;
     }
 
+    /**
+     * Deteta colisão entre dois colliders.
+     * Atualmente apenas utiliza do CircleCollider
+        * @param a Primeiro collider
+        * @param b Segundo collider
+        * @return Verdadeiro se houver colisão, falso caso contrário
+    **/
 public boolean detectCollision(ICollider a, ICollider b) {
     if (a instanceof CircleCollider && b instanceof CircleCollider) {
         CircleCollider ca = (CircleCollider) a;
