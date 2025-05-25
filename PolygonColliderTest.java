@@ -50,8 +50,8 @@ public class PolygonColliderTest {
         );
         PolygonCollider collider = PolygonCollider.create(t, verts);
         collider.adjustToTransform();
-        
-        String expected = "(0,67,0,33) (-0,33,0,33) (-0,33,-0,67)";
+
+        String expected = "(0.67,0.33) (-0.33,0.33) (-0.33,-0.67)";
         assertEquals(expected, collider.toString());
     }
 
@@ -66,8 +66,8 @@ public class PolygonColliderTest {
         );
         PolygonCollider collider = PolygonCollider.create(t, verts);
         collider.adjustToTransform();
-        
-        String expected = "(2,00,2,00) (-2,00,2,00) (-2,00,-2,00) (2,00,-2,00)";
+
+        String expected = "(2.00,2.00) (-2.00,2.00) (-2.00,-2.00) (2.00,-2.00)";
         assertEquals(expected, collider.toString());
     }
 
@@ -81,8 +81,8 @@ public class PolygonColliderTest {
         );
         PolygonCollider collider = PolygonCollider.create(t, verts);
         collider.adjustToTransform();
-        
-        String expected = "(1,17,2,17) (2,17,2,17) (1,17,3,17)";
+
+        String expected = "(1.17,2.17) (2.17,2.17) (1.17,3.17)";
         assertEquals(expected, collider.toString());
     }
 }

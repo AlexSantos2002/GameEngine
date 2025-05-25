@@ -1,4 +1,3 @@
-// Main.java atualizado com suporte para Shield e Bubble
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -267,7 +266,6 @@ public class Main extends JFrame implements KeyListener {
                 }
             }
 
-            // Bubble (escudo ativo)
             if (Behaviour.isShieldActive()) {
                 Graphics2D g2d = (Graphics2D) g.create();
                 Point center = go.collider().centroid();
@@ -285,17 +283,14 @@ public class Main extends JFrame implements KeyListener {
                 g2d.dispose();
             }
 
-            // Corações (vidas)
             for (int i = 0; i < playerLives; i++) {
                 g.drawImage(heartImage, 20 + i * 40, 20, 32, 32, null);
             }
 
-            // Pontuação
             g.setColor(Color.WHITE);
             g.setFont(new Font("Arial", Font.BOLD, 24));
             g.drawString("Score: " + Behaviour.getScore(), getWidth() - 150, 40);
 
-            // Explosões
             long now = System.currentTimeMillis();
             int duration = 1500;
             int frameCount = explosionFrames.length;

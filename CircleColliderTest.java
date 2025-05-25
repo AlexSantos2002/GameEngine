@@ -26,8 +26,8 @@ public class CircleColliderTest {
         System.out.println("DEBUG: toString() = " + str);
 
         String[] parts = str.split(" ");
-        assertEquals("(2,00,2,00)", parts[0]);
-        double raio = Double.parseDouble(parts[1].replace(",", "."));
+        assertEquals("(2.00,2.00)", parts[0]);
+        double raio = Double.parseDouble(parts[1]);
 
         assertEquals(8.0, raio, 0.01);
     }
@@ -38,6 +38,6 @@ public class CircleColliderTest {
         CircleCollider c = CircleCollider.create(t, 0, 0, 2.0);
 
         String result = c.toString();
-        assertEquals("(1,20,3,40) 3,00", result);
+        assertEquals("(1.20,3.40) 3.00", result);
     }
 }

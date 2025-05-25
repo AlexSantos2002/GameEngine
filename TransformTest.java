@@ -32,7 +32,7 @@ public class TransformTest {
     @Test
     public void testRotatePositiveAndOverflow() {
         Transform t = new Transform(0, 0, 0, 350, 1);
-        t.rotate(20); // 350 + 20 = 370 % 360 = 10
+        t.rotate(20);
 
         assertEquals(10.0, t.angle(), 0.001);
     }
@@ -40,7 +40,7 @@ public class TransformTest {
     @Test
     public void testRotateNegative() {
         Transform t = new Transform(0, 0, 0, 10, 1);
-        t.rotate(-20); // 10 - 20 = -10 % 360 = 350
+        t.rotate(-20);
 
         assertEquals(350.0, t.angle(), 0.001);
     }
@@ -48,7 +48,7 @@ public class TransformTest {
     @Test
     public void testScale() {
         Transform t = new Transform(0, 0, 0, 0, 2.5);
-        t.scale(1.5); // 2.5 + 1.5 = 4.0
+        t.scale(1.5);
 
         assertEquals(4.0, t.scale(), 0.001);
     }
