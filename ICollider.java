@@ -18,4 +18,25 @@ public interface ICollider {
      * Aplica a transformação atual (posição, rotação e escala) ao colisor.
      */
     void adjustToTransform();
+
+    /**
+     * Verifica se o colisor colide com outro colisor.
+     * @param other outro colisor a ser verificado
+     * @return true se houver colisão, false caso contrário
+     */
+    boolean collidesWith(ICollider other);
+
+    /**
+     * Verifica se o colisor colide com um ponto.
+     * @param point ponto a ser verificado
+     * @return true se houver colisão, false caso contrário
+     */
+    boolean collidesWithCircle(CircleCollider circle);
+
+    /**
+     * Verifica se o colisor colide com um polígono.
+     * @param polygon polígono a ser verificado
+     * @return true se houver colisão, false caso contrário
+     */
+    boolean collidesWithPolygon(PolygonCollider polygon);
 }

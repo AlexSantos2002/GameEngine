@@ -1,21 +1,8 @@
 import java.awt.Point;
 
-/**
- * Colisor circular que se ajusta à posição, rotação e escala da Transform associada.
- * @author Alexandre Santos(71522), Nurio Pereira (72788)
- * @version 1.1 10/04/2025
- * @inv O centro do círculo é sempre a posição definida pela Transform associada. O raio é escalado de acordo com o fator de escala.
- */
 public class CircleCollider extends Collider {
     private double x, y, r;
 
-    /**
-     * Construtor privado para forçar o uso de factory method
-     * @param t Transform associada
-     * @param cx coordenada x do centro original
-     * @param cy coordenada y do centro original
-     * @param r raio original do círculo
-     */
     private CircleCollider(Transform t, double cx, double cy, double r) {
         super(t);
         this.x = cx;
@@ -23,23 +10,12 @@ public class CircleCollider extends Collider {
         this.r = r;
     }
 
-    /**
-     * Método de criação de CircleCollider garantindo transformação inicial
-     * @param t Transform associada
-     * @param cx coordenada x do centro
-     * @param cy coordenada y do centro
-     * @param r raio
-     * @return nova instância de CircleCollider com transformação aplicada
-     */
     public static CircleCollider create(Transform t, double cx, double cy, double r) {
         CircleCollider c = new CircleCollider(t, cx, cy, r);
         c.adjustToTransform();
         return c;
     }
 
-    /**
-     * Aplica a transformação atual ao colisor circular
-     */
     @Override
     public void adjustToTransform() {
         this.r *= transform.scale();
@@ -47,29 +23,38 @@ public class CircleCollider extends Collider {
         this.y = transform.posY();
     }
 
-    /**
-     * Retorna o centro atual do colisor circular
-     * @return Ponto representando o centro
-     */
     @Override
     public Point centroid() {
         return new Point((int) x, (int) y);
     }
 
-    /**
-     * Retorna o raio atual do colisor circular (já com escala aplicada)
-     * @return raio atual
-     */
     public double getRadius() {
         return r;
     }
 
-    /**
-     * Representação textual do colisor
-     * @return String no formato "(x,y) raio"
-     */
     @Override
     public String toString() {
         return String.format("(%.2f,%.2f) %.2f", x, y, r);
+    }
+
+    // Métodos de colisão
+    @Override
+    public boolean collidesWith(ICollider other) {
+        return other.collidesWithCircle(this);
+    }
+
+    @Override
+    public boolean collidesWithCircle(CircleCollider circle) {
+        double dx = this.x - circle.x;
+        double dy = this.y - circle.y;
+        double distanceSq = dx * dx + dy * dy;
+        double radiusSum = this.r + circle.r;
+        return distanceSq <= radiusSum * radiusSum;
+    }
+
+    @Override
+    public boolean collidesWithPolygon(PolygonCollider polygon) {
+        // Lógica de colisão círculo-polígono (não implementada aqui)
+        return false;
     }
 }
